@@ -1,11 +1,11 @@
 # picoweb
 
-Teeny Tiny Web Wrapper arround GO's built in MUX
+Teeny Tiny Web Wrapper arround httprouter
 Uses github.com/tylerb/graceful as Server
 
 
 ```GO
-    package main
+   package main
 
     import (
         "fmt"
@@ -19,8 +19,10 @@ Uses github.com/tylerb/graceful as Server
 
     func main() {
         pico := picoweb.New()
-        pico.HandleFunc("/", Home)
+        pico.Static("/static", "./static")
+        pico.Get("/", Home)
         pico.Listen(7777)
     }
+
 
 ```
