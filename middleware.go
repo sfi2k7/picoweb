@@ -17,3 +17,12 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 		fmt.Println(time.Since(start), r.URL, RequestCount)
 	}
 }
+
+func middlehttp(fn http.Handler) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		RequestCount++
+		start := time.Now()
+		fn.ServeHTTP(w, r)
+		fmt.Println(time.Since(start), r.URL, RequestCount)
+	}
+}
