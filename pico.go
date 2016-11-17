@@ -7,26 +7,50 @@ import (
 
 	"strconv"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/tylerb/graceful"
 )
 
+var (
+	RequestCount int
+)
+
 type Pico struct {
-	mux    *http.ServeMux
+	mux    *httprouter.Router
 	server *graceful.Server
 }
 
 type PicoHandler func(c *Context)
 
-func (p *Pico) HandleFunc(pattern string, fn PicoHandler) {
-	p.mux.HandleFunc(pattern, middle(fn))
+func (p *Pico) Get(pattern string, fn PicoHandler) {
+	p.mux.GET(pattern, middle(fn))
+}
+
+func (p *Pico) Post(pattern string, fn PicoHandler) {
+	p.mux.POST(pattern, middle(fn))
+}
+
+func (p *Pico) Put(pattern string, fn PicoHandler) {
+	p.mux.PUT(pattern, middle(fn))
+}
+
+func (p *Pico) Delete(pattern string, fn PicoHandler) {
+	p.mux.DELETE(pattern, middle(fn))
 }
 
 func (p *Pico) Static(urlPath, diskPath string) {
-	p.mux.Handle(urlPath, http.StripPrefix(urlPath, http.FileServer(http.Dir(diskPath))))
+	p.mux.ServeFiles(urlPath+"/*filepath", http.Dir(diskPath))
 }
 
-func (p *Pico) Listen(port int) {
-	os.Setenv("PORT", strconv.Itoa(port))
+func (p *Pico) Listen(port int) error {
+	envPort := os.Getenv("PORT")
+	if len(envPort) > 0 {
+		pi, err := strconv.Atoi(envPort)
+		if err == nil && pi < 65000 {
+			port = pi
+		}
+	}
+
 	p.server = &graceful.Server{
 		Timeout: 10 * time.Second,
 		Server: &http.Server{
@@ -34,6 +58,7 @@ func (p *Pico) Listen(port int) {
 			Handler: p.mux,
 		},
 	}
+	return p.server.ListenAndServe()
 
 }
 
@@ -43,5 +68,5 @@ func (p *Pico) Stop() {
 }
 
 func New() *Pico {
-	return &Pico{mux: http.NewServeMux()}
+	return &Pico{mux: httprouter.New()}
 }

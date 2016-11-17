@@ -31,12 +31,12 @@ func (c *Context) Json(data interface{}) {
 }
 
 func (c *Context) View(filePath string, data interface{}) {
-	tmpl, err := template.New("temp").ParseFiles(filePath)
+	tmpl, err := template.ParseFiles(filePath)
 	if err != nil {
 		fmt.Fprint(c, err.Error())
 		return
 	}
-	tmpl.Execute(c, data)
+	err = tmpl.Execute(c.w, data)
 }
 
 func (c *Context) Header() http.Header {

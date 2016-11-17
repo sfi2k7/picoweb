@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		RequestCount++
 		start := time.Now()
-		c := &Context{}
-		c.r = r
-		c.w = w
+		c := &Context{w: w, r: r}
 		p(c)
-		fmt.Println("Took", time.Since(start))
+		fmt.Println(time.Since(start), r.URL, RequestCount)
 	}
 }
