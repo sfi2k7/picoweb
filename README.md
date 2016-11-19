@@ -1,10 +1,10 @@
 # picoweb - tiny web franework
 
 Teeny Tiny Web Wrapper around httprouter
-# Features
+## Features
 - graceful shutdown
 - socketio
-- websocket
+- raw WebSocket (soon)
 - more on the way
 
 ```GO
@@ -26,6 +26,32 @@ Teeny Tiny Web Wrapper around httprouter
         pico.Get("/", Home)
         pico.Listen(7777)
     }
+```
 
+### SocketIO
+
+```GO
+
+    pico.EnableSocketIoOn("/socket.io/")
+    pico.OnConnection(func(s socketio.Socket) {
+        s.emit("welcome","Welcome to Pico web framewwork")
+    })
 
 ```
+
+### Enable Production Mode
+
+```GO
+    pico.Production()
+```
+
+### Parameters
+
+```GO
+    pico.Get("/:name",func (c *picoweb.Context){
+        userName := c.Params("name")
+    })
+```
+
+## License
+    MIT - Please see the `LICENSE` file
