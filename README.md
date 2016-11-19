@@ -1,7 +1,9 @@
 # picoweb - tiny web franework
 
 Teeny Tiny Web Wrapper around httprouter
+
 ## Features
+- Fast - thanks to httprouter
 - graceful shutdown
 - socketio
 - raw WebSocket (soon)
@@ -17,7 +19,7 @@ Teeny Tiny Web Wrapper around httprouter
     )
 
     func Home(c *picoweb.Context) {
-        fmt.Fprint(c, "Hello World")
+        fmt.Fprint(c, "Hello Pico")
     }
 
     func main() {
@@ -54,4 +56,4 @@ Teeny Tiny Web Wrapper around httprouter
 ```
 
 ## License
-    MIT - Please see the `LICENSE` file
+MIT - Please see the `LICENSE` file
