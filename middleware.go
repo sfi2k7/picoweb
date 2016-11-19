@@ -14,7 +14,9 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 		start := time.Now()
 		c := &Context{w: w, r: r}
 		p(c)
-		fmt.Println(time.Since(start), r.URL, RequestCount)
+		if isDev{
+			fmt.Println(time.Since(start), r.URL, RequestCount)
+		}
 	}
 }
 
