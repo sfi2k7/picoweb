@@ -12,7 +12,12 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		RequestCount++
 		start := time.Now()
-		c := &Context{w: w, r: r}
+		c := &Context{w: w, r: r,params:make(map[string]string)}
+		
+		for _,par:=range ps{
+			c.params[par.Key] = par.Value
+		}
+		
 		p(c)
 		if isDev{
 			fmt.Println(time.Since(start), r.URL, RequestCount)

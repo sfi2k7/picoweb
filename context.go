@@ -9,6 +9,7 @@ import "encoding/json"
 type Context struct {
 	w http.ResponseWriter
 	r *http.Request
+	params map[string]string
 }
 
 func (c *Context) Body() ([]byte, error) {
@@ -24,9 +25,22 @@ func (c *Context) Form(key string) string {
 	return c.r.FormValue(key)
 }
 
+func (c *Context) File(filePath string,mimeType string){
+	c.w.Header() .Set("content-type", mimeType) 
+	http.ServeFile(c.w, c.r, filePath)   
+}
+
+func (c *Context) String(str string){
+	fmt.Fprint(c, str) 
+}
+
+func (c *Context) Status(statusCode int){
+	c.w.WriteHeader(statusCode)  
+}
+
 func (c *Context) Json(data interface{}) {
 	jsoned, _ := json.Marshal(data)
-	c.Header().Add("content-type", "application/json")
+	c.ResponseHeader().Add("content-type", "application/json")
 	fmt.Fprint(c, string(jsoned))
 }
 
@@ -39,7 +53,12 @@ func (c *Context) View(filePath string, data interface{}) {
 	err = tmpl.Execute(c.w, data)
 }
 
-func (c *Context) Header() http.Header {
+func (c *Context) Params(name string) string{
+	v,_:=c.params[name]
+	return v
+}
+
+func (c *Context) ResponseHeader() http.Header {
 	return c.w.Header()
 }
 

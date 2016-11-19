@@ -78,7 +78,7 @@ func (p *Pico) Listen(port int) error {
 	}
 
 	p.server = &graceful.Server{
-		Timeout: 10 * time.Second,
+		Timeout: 3 * time.Second,
 		Server: &http.Server{
 			Addr:    ":" + strconv.Itoa(port),
 			Handler: p.mux,
@@ -98,9 +98,10 @@ func (p *Pico) StopOnInt() {
 	go func() {
 		for sig := range p.c {
 			fmt.Println(sig.String(), "Shutting Down!")
+			
+			close(p.c)
 			p.Stop()
 			fmt.Println(sig.String(), "Done!")
-			close(p.c)
 			os.Exit(0)
 		}
 	}()

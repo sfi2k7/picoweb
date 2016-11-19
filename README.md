@@ -1,11 +1,14 @@
-# picoweb
+# picoweb - tiny web franework
 
-Teeny Tiny Web Wrapper arround httprouter
-Uses github.com/tylerb/graceful as Server
-
+Teeny Tiny Web Wrapper around httprouter
+# Features
+- graceful shutdown
+- socketio
+- websocket
+- more on the way
 
 ```GO
-   package main
+    package main
 
     import (
         "fmt"
