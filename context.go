@@ -7,8 +7,8 @@ import "fmt"
 import "encoding/json"
 
 type Context struct {
-	w http.ResponseWriter
-	r *http.Request
+	w      http.ResponseWriter
+	r      *http.Request
 	params map[string]string
 }
 
@@ -25,17 +25,25 @@ func (c *Context) Form(key string) string {
 	return c.r.FormValue(key)
 }
 
-func (c *Context) File(filePath string,mimeType string){
-	c.w.Header() .Set("content-type", mimeType) 
-	http.ServeFile(c.w, c.r, filePath)   
+func (c *Context) Method() string {
+	return c.r.Method
 }
 
-func (c *Context) String(str string){
-	fmt.Fprint(c, str) 
+func (c *Context) Header(key string) string {
+	return c.r.Header.Get(key)
 }
 
-func (c *Context) Status(statusCode int){
-	c.w.WriteHeader(statusCode)  
+func (c *Context) File(filePath string, mimeType string) {
+	c.w.Header().Set("content-type", mimeType)
+	http.ServeFile(c.w, c.r, filePath)
+}
+
+func (c *Context) String(str string) {
+	fmt.Fprint(c, str)
+}
+
+func (c *Context) Status(statusCode int) {
+	c.w.WriteHeader(statusCode)
 }
 
 func (c *Context) Json(data interface{}) {
@@ -53,8 +61,8 @@ func (c *Context) View(filePath string, data interface{}) {
 	err = tmpl.Execute(c.w, data)
 }
 
-func (c *Context) Params(name string) string{
-	v,_:=c.params[name]
+func (c *Context) Params(name string) string {
+	v, _ := c.params[name]
 	return v
 }
 

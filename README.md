@@ -3,8 +3,8 @@
 Teeny Tiny Web Wrapper around httprouter
 
 ## Features
-- Fast - thanks to httprouter
-- graceful shutdown
+- Fast - thanks to _httprouter_
+- **graceful** shutdown
 - socketio
 - raw WebSocket (soon)
 - more on the way
@@ -55,5 +55,5 @@ Teeny Tiny Web Wrapper around httprouter
     })
 ```
 
-## License
+### License
 MIT - Please see the `LICENSE` file
