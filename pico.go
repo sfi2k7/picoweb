@@ -17,7 +17,7 @@ import (
 
 var (
 	RequestCount int
-	isDev bool
+	isDev        bool
 )
 
 type Pico struct {
@@ -64,8 +64,8 @@ func (p *Pico) OnError(fn func(s socketio.Socket, e error)) {
 	p.sio.On("error", fn)
 }
 
-func (p *Pico) On(event string, fn func(msg string)){
-	p.sio.On(event, fn) 
+func (p *Pico) On(event string, fn func(msg string)) {
+	p.sio.On(event, fn)
 }
 
 func (p *Pico) Listen(port int) error {
@@ -88,9 +88,10 @@ func (p *Pico) Listen(port int) error {
 
 }
 
-func (p *Pico) Production(){
-	isDev = false;
+func (p *Pico) Production() {
+	isDev = false
 }
+
 func (p *Pico) StopOnInt() {
 	p.c = make(chan os.Signal, 1)
 	signal.Notify(p.c, os.Interrupt)
@@ -98,7 +99,7 @@ func (p *Pico) StopOnInt() {
 	go func() {
 		for sig := range p.c {
 			fmt.Println(sig.String(), "Shutting Down!")
-			
+
 			close(p.c)
 			p.Stop()
 			fmt.Println(sig.String(), "Done!")

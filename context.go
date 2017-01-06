@@ -33,6 +33,10 @@ func (c *Context) Header(key string) string {
 	return c.r.Header.Get(key)
 }
 
+func (c *Context) SetHeader(key string, value string) {
+	c.w.Header().Set(key, value)
+}
+
 func (c *Context) File(filePath string, mimeType string) {
 	c.w.Header().Set("content-type", mimeType)
 	http.ServeFile(c.w, c.r, filePath)

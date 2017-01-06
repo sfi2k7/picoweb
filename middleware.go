@@ -12,14 +12,14 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		RequestCount++
 		start := time.Now()
-		c := &Context{w: w, r: r,params:make(map[string]string)}
-		
-		for _,par:=range ps{
+		c := &Context{w: w, r: r, params: make(map[string]string)}
+
+		for _, par := range ps {
 			c.params[par.Key] = par.Value
 		}
-		
+
 		p(c)
-		if isDev{
+		if isDev {
 			fmt.Println(time.Since(start), r.URL, RequestCount)
 		}
 	}
@@ -28,8 +28,8 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 func middlehttp(fn http.Handler) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		RequestCount++
-		start := time.Now()
+		//start := time.Now()
 		fn.ServeHTTP(w, r)
-		fmt.Println(time.Since(start), r.URL, RequestCount)
+		//fmt.Println(time.Since(start), r.URL, RequestCount)
 	}
 }
