@@ -18,6 +18,7 @@ import (
 var (
 	RequestCount int
 	isDev        bool
+	flash        Flash
 )
 
 type Pico struct {
@@ -68,6 +69,14 @@ func (p *Pico) On(event string, fn func(msg string)) {
 	p.sio.On(event, fn)
 }
 
+func (p *Pico) GetFlash(sessionId string) interface{} {
+	return flash.Get(sessionId)
+}
+
+func (p *Pico) SetFlash(sessionId string, value interface{}) {
+	flash.Set(sessionId, value)
+}
+
 func (p *Pico) Listen(port int) error {
 	envPort := os.Getenv("PORT")
 	if len(envPort) > 0 {
@@ -84,6 +93,7 @@ func (p *Pico) Listen(port int) error {
 			Handler: p.mux,
 		},
 	}
+	flash = make(Flash)
 	return p.server.ListenAndServe()
 
 }
@@ -97,20 +107,28 @@ func (p *Pico) StopOnInt() {
 	signal.Notify(p.c, os.Interrupt)
 	signal.Notify(p.c, os.Kill)
 	go func() {
-		for sig := range p.c {
-			fmt.Println(sig.String(), "Shutting Down!")
-
-			close(p.c)
-			p.Stop()
-			fmt.Println(sig.String(), "Done!")
-			os.Exit(0)
+		<-p.c
+		if isDev {
+			fmt.Println("Shutting Down!")
 		}
+
+		p.Stop()
+
+		if isDev {
+			fmt.Println("Done!")
+		}
+
+		close(p.c)
+
+		os.Exit(0)
+
 	}()
 }
 
 func (p *Pico) Stop() {
 	p.server.Stop(time.Second * 2)
 	fmt.Println("Waiting on Stop Channel")
+	flash.Clear()
 	<-p.server.StopChan()
 	fmt.Println("Channel Returned")
 }
