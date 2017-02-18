@@ -47,6 +47,14 @@ func (p *Pico) Delete(pattern string, fn PicoHandler) {
 }
 
 func (p *Pico) Static(urlPath, diskPath string) {
+	if urlPath[len(urlPath)-1] == '/'{
+		urlPath = urlPath[:len(urlPath)-1]
+	}
+
+	if urlPath[0:1] != "/"{
+		urlPath = "/"+urlPath
+	}
+
 	p.mux.ServeFiles(urlPath+"/*filepath", http.Dir(diskPath))
 }
 
@@ -87,7 +95,7 @@ func (p *Pico) Listen(port int) error {
 	}
 
 	p.server = &graceful.Server{
-		Timeout: 3 * time.Second,
+		Timeout: 2 * time.Second,
 		Server: &http.Server{
 			Addr:    ":" + strconv.Itoa(port),
 			Handler: p.mux,
@@ -95,7 +103,6 @@ func (p *Pico) Listen(port int) error {
 	}
 	flash = make(Flash)
 	return p.server.ListenAndServe()
-
 }
 
 func (p *Pico) Production() {
@@ -106,6 +113,7 @@ func (p *Pico) StopOnInt() {
 	p.c = make(chan os.Signal, 1)
 	signal.Notify(p.c, os.Interrupt)
 	signal.Notify(p.c, os.Kill)
+	
 	go func() {
 		<-p.c
 		if isDev {
