@@ -33,6 +33,14 @@ func (c *Context) Header(key string) string {
 	return c.r.Header.Get(key)
 }
 
+func (c *Context) RemoteIP() string {
+	return c.r.RemoteAddr
+}
+
+func (c *Context) R() *http.Request {
+	return c.r
+}
+
 func (c *Context) SetHeader(key string, value string) {
 	c.w.Header().Set(key, value)
 }
