@@ -38,6 +38,10 @@ func (p *Pico) Post(pattern string, fn PicoHandler) {
 	p.mux.POST(pattern, middle(fn))
 }
 
+func (p *Pico) Options(pattern string, fn PicoHandler) {
+	p.mux.OPTIONS(pattern, middle(fn))
+}
+
 func (p *Pico) Put(pattern string, fn PicoHandler) {
 	p.mux.PUT(pattern, middle(fn))
 }
@@ -47,12 +51,12 @@ func (p *Pico) Delete(pattern string, fn PicoHandler) {
 }
 
 func (p *Pico) Static(urlPath, diskPath string) {
-	if urlPath[len(urlPath)-1] == '/'{
+	if urlPath[len(urlPath)-1] == '/' {
 		urlPath = urlPath[:len(urlPath)-1]
 	}
 
-	if urlPath[0:1] != "/"{
-		urlPath = "/"+urlPath
+	if urlPath[0:1] != "/" {
+		urlPath = "/" + urlPath
 	}
 
 	p.mux.ServeFiles(urlPath+"/*filepath", http.Dir(diskPath))
@@ -113,7 +117,7 @@ func (p *Pico) StopOnInt() {
 	p.c = make(chan os.Signal, 1)
 	signal.Notify(p.c, os.Interrupt)
 	signal.Notify(p.c, os.Kill)
-	
+
 	go func() {
 		<-p.c
 		if isDev {
