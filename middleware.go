@@ -18,9 +18,10 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 		for _, par := range ps {
 			c.params[par.Key] = par.Value
 		}
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		p(c)
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+
 		if isDev {
 			fmt.Println(time.Since(start), r.URL, RequestCount)
 		}
