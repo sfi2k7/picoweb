@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/googollee/go-socket.io"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -34,5 +35,18 @@ func middlehttp(fn http.Handler) func(w http.ResponseWriter, r *http.Request, ps
 		//start := time.Now()
 		fn.ServeHTTP(w, r)
 		//fmt.Println(time.Since(start), r.URL, RequestCount)
+	}
+}
+
+func socket_middle(fn func(c Socket)) func(socketio.Socket) {
+	return func(socket socketio.Socket) {
+		cs := Socket{Socket: socket}
+		fn(cs)
+	}
+}
+func socket_middle_error(fn func(c Socket, err error)) func(socketio.Socket, error) {
+	return func(socket socketio.Socket, err error) {
+		cs := Socket{Socket: socket}
+		fn(cs, err)
 	}
 }

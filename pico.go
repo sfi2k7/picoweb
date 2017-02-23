@@ -69,12 +69,12 @@ func (p *Pico) EnableSocketIoOn(url string) {
 	fmt.Println(err)
 }
 
-func (p *Pico) OnConnection(fn func(s socketio.Socket)) {
-	p.sio.On("connection", fn)
+func (p *Pico) OnConnection(fn func(s Socket)) {
+	p.sio.On("connection", socket_middle(fn))
 }
 
-func (p *Pico) OnError(fn func(s socketio.Socket, e error)) {
-	p.sio.On("error", fn)
+func (p *Pico) OnError(fn func(s Socket, e error)) {
+	p.sio.On("error", socket_middle_error(fn))
 }
 
 func (p *Pico) On(event string, fn func(msg string)) {

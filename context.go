@@ -5,6 +5,7 @@ import "io/ioutil"
 import "html/template"
 import "fmt"
 import "encoding/json"
+import "github.com/googollee/go-socket.io"
 
 type Context struct {
 	w      http.ResponseWriter
@@ -88,4 +89,8 @@ func (c *Context) WriteHeader(n int) {
 
 func (c *Context) Write(b []byte) (int, error) {
 	return c.w.Write(b)
+}
+
+type Socket struct {
+	socketio.Socket
 }
