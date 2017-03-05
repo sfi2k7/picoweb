@@ -22,10 +22,12 @@ var (
 )
 
 type Pico struct {
-	mux    *httprouter.Router
-	server *graceful.Server
-	c      chan os.Signal
-	sio    *socketio.Server
+	mux          *httprouter.Router
+	server       *graceful.Server
+	c            chan os.Signal
+	sio          *socketio.Server
+	trackSession bool
+	cookieName   string
 }
 
 type PicoHandler func(c *Context)
@@ -88,6 +90,11 @@ func (p *Pico) GetFlash(sessionId string) interface{} {
 func (p *Pico) SetFlash(sessionId string, value interface{}) {
 	flash.Set(sessionId, value)
 }
+
+// func (p *Pico) TrackSessionUsingCookie(cookieName string) {
+// 	p.trackSession = true
+// 	p.cookieName = cookieName
+// }
 
 func (p *Pico) Listen(port int) error {
 	envPort := os.Getenv("PORT")

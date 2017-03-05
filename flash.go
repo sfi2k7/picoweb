@@ -18,8 +18,8 @@ func (f Flash) Get(sessionId string) interface{} {
 	flashMutex.Lock()
 	defer flashMutex.Unlock()
 
-	v, _ := f[sessionId]
-	if v != nil {
+	v, ok := f[sessionId]
+	if ok {
 		delete(f, sessionId)
 	}
 

@@ -6,11 +6,13 @@ import "html/template"
 import "fmt"
 import "encoding/json"
 import "github.com/googollee/go-socket.io"
+import "time"
 
 type Context struct {
-	w      http.ResponseWriter
-	r      *http.Request
-	params map[string]string
+	w         http.ResponseWriter
+	r         *http.Request
+	params    map[string]string
+	SessionId string
 }
 
 func (c *Context) Body() ([]byte, error) {
@@ -89,6 +91,41 @@ func (c *Context) WriteHeader(n int) {
 
 func (c *Context) Write(b []byte) (int, error) {
 	return c.w.Write(b)
+}
+
+func (c *Context) SetCookie(name, value string, expireIn time.Duration) {
+	cookie := &http.Cookie{
+		Name:     name,
+		Value:    value,
+		MaxAge:   0,
+		HttpOnly: true,
+		Secure:   false,
+		Expires:  time.Now().Add(expireIn),
+		Path:     "/",
+		Raw:      value,
+		Unparsed: []string{value},
+	}
+	http.SetCookie(c.w, cookie)
+}
+
+func (c *Context) GetCookie(name string) string {
+	cookie, err := c.r.Cookie(name)
+	if err != nil {
+		return ""
+	}
+	val := cookie.Value
+	if len(val) == 0 {
+		for _, ck := range c.r.Cookies() {
+			if ck.Name == name {
+				return ck.Value
+			}
+		}
+	}
+	return ""
+}
+
+func (c *Context) RemoveCookie(name string) {
+	c.SetCookie(name, "", -(time.Hour * 36))
 }
 
 type Socket struct {
