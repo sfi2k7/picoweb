@@ -12,6 +12,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/tylerb/graceful"
 
+	"strings"
+
 	"github.com/googollee/go-socket.io"
 )
 
@@ -95,6 +97,20 @@ func (p *Pico) SetFlash(sessionId string, value interface{}) {
 // 	p.trackSession = true
 // 	p.cookieName = cookieName
 // }
+
+func (p *Pico) ListenS(port string) {
+	if strings.Index(port, ":") == 0 {
+		port = port[1:]
+	}
+	po, err := strconv.ParseInt(port, 10, 32)
+	if err != nil {
+		panic("Port Error (:9999 etc)")
+	}
+	if po < 0 || po > 65000 {
+		panic("PORT is OUT of Range")
+	}
+	p.Listen(int(po))
+}
 
 func (p *Pico) Listen(port int) error {
 	envPort := os.Getenv("PORT")
