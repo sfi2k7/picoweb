@@ -1,4 +1,4 @@
-# DO NOT USE
+## WIP - Not ready to use
 # picoweb - tiny web franework
 
 Teeny Tiny Web Wrapper around httprouter
