@@ -7,6 +7,8 @@ import "fmt"
 import "encoding/json"
 import "github.com/googollee/go-socket.io"
 import "time"
+import "strconv"
+import "github.com/pkg/errors"
 
 type Context struct {
 	w         http.ResponseWriter
@@ -20,8 +22,36 @@ func (c *Context) Body() ([]byte, error) {
 	return bts, err
 }
 
+func (c *Context) Bytes() []byte {
+	bts, _ := ioutil.ReadAll(c.r.Body)
+	return bts
+}
+
 func (c *Context) Query(key string) string {
 	return c.r.URL.Query().Get(key)
+}
+
+func (c *Context) QueryInt(key string) (int, error) {
+	v := c.Query(key)
+	if len(v) == 0 {
+		return 0, errors.New("key not found in path")
+	}
+	i, err := strconv.Atoi(key)
+	if err != nil {
+		return 0, errors.New("Could not parse as Int")
+	}
+	return i, nil
+}
+func (c *Context) QueryBool(key string) (bool, error) {
+	v := c.Query(key)
+	if len(v) == 0 {
+		return false, errors.New("key not found in path")
+	}
+	b, err := strconv.ParseBool(key)
+	if err != nil {
+		return false, errors.New("Could not parse as Bool")
+	}
+	return b, nil
 }
 
 func (c *Context) Form(key string) string {
@@ -50,6 +80,11 @@ func (c *Context) SetHeader(key string, value string) {
 
 func (c *Context) File(filePath string, mimeType string) {
 	c.w.Header().Set("content-type", mimeType)
+	http.ServeFile(c.w, c.r, filePath)
+}
+
+func (c *Context) FileHTML(filePath string) {
+	c.w.Header().Set("content-type", "text/html; charset=utf-8")
 	http.ServeFile(c.w, c.r, filePath)
 }
 

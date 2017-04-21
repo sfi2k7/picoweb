@@ -30,6 +30,8 @@ type Pico struct {
 	sio          *socketio.Server
 	trackSession bool
 	cookieName   string
+	pre          PicoHandler
+	post         PicoHandler
 }
 
 type PicoHandler func(c *Context)
@@ -102,6 +104,7 @@ func (p *Pico) ListenS(port string) {
 	if strings.Index(port, ":") == 0 {
 		port = port[1:]
 	}
+
 	po, err := strconv.ParseInt(port, 10, 32)
 	if err != nil {
 		panic("Port Error (:9999 etc)")
@@ -136,7 +139,11 @@ func (p *Pico) Production() {
 	isDev = false
 }
 
-func (p *Pico) StopOnInt() {
+func (p *Pico) StopOnInit() {
+	p.StopOnIntWithFunc(nil)
+}
+
+func (p *Pico) StopOnIntWithFunc(fn func()) {
 	p.c = make(chan os.Signal, 1)
 	signal.Notify(p.c, os.Interrupt)
 	signal.Notify(p.c, os.Kill)
@@ -154,6 +161,9 @@ func (p *Pico) StopOnInt() {
 		}
 
 		close(p.c)
+		if fn != nil {
+			fn()
+		}
 
 		os.Exit(0)
 
