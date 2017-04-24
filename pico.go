@@ -139,7 +139,7 @@ func (p *Pico) Production() {
 	isDev = false
 }
 
-func (p *Pico) StopOnInit() {
+func (p *Pico) StopOnInt() {
 	p.StopOnIntWithFunc(nil)
 }
 
