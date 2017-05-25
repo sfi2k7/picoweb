@@ -166,7 +166,6 @@ func (p *Pico) StopOnIntWithFunc(fn func()) {
 		}
 
 		os.Exit(0)
-
 	}()
 }
 
