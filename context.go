@@ -36,7 +36,7 @@ func (c *Context) QueryInt(key string) (int, error) {
 	if len(v) == 0 {
 		return 0, errors.New("key not found in path")
 	}
-	i, err := strconv.Atoi(key)
+	i, err := strconv.Atoi(v)
 	if err != nil {
 		return 0, errors.New("Could not parse as Int")
 	}
