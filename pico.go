@@ -1,6 +1,7 @@
 package picoweb
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/tylerb/graceful"
 
 	"strings"
 
@@ -25,7 +25,7 @@ var (
 
 type Pico struct {
 	mux          *httprouter.Router
-	server       *graceful.Server
+	server       *http.Server
 	c            chan os.Signal
 	sio          *socketio.Server
 	trackSession bool
@@ -124,13 +124,15 @@ func (p *Pico) Listen(port int) error {
 		}
 	}
 
-	p.server = &graceful.Server{
-		Timeout: 2 * time.Second,
-		Server: &http.Server{
-			Addr:    ":" + strconv.Itoa(port),
-			Handler: p.mux,
-		},
+	p.server = &http.Server{
+		Addr:    ":" + strconv.Itoa(port),
+		Handler: p.mux,
 	}
+
+	// p.server = &graceful.Server{
+	// 	Timeout: 2 * time.Second,
+	// 	Server:  &http.Server{},
+	// }
 	flash = make(Flash)
 	return p.server.ListenAndServe()
 }
@@ -161,6 +163,7 @@ func (p *Pico) StopOnIntWithFunc(fn func()) {
 		}
 
 		close(p.c)
+
 		if fn != nil {
 			fn()
 		}
@@ -170,11 +173,18 @@ func (p *Pico) StopOnIntWithFunc(fn func()) {
 }
 
 func (p *Pico) Stop() {
-	p.server.Stop(time.Second * 2)
+	fmt.Println("Shutting Down server")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	err := p.server.Shutdown(ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
+	cancel()
+
+	//p.server.Stop(time.Second * 2)
 	fmt.Println("Waiting on Stop Channel")
 	flash.Clear()
-	<-p.server.StopChan()
-	fmt.Println("Channel Returned")
+	//<-p.server.StopChan()
 }
 
 func New() *Pico {

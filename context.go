@@ -42,6 +42,7 @@ func (c *Context) QueryInt(key string) (int, error) {
 	}
 	return i, nil
 }
+
 func (c *Context) QueryBool(key string) (bool, error) {
 	v := c.Query(key)
 	if len(v) == 0 {
