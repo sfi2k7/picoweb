@@ -10,12 +10,15 @@ import (
 
 	"strconv"
 
+	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
 
 	"strings"
 
 	"github.com/googollee/go-socket.io"
 )
+
+var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
 
 var (
 	RequestCount int
@@ -147,11 +150,11 @@ func (p *Pico) StopOnInt() {
 
 func (p *Pico) StopOnIntWithFunc(fn func()) {
 	p.c = make(chan os.Signal, 1)
-	signal.Notify(p.c, os.Interrupt)
-	signal.Notify(p.c, os.Kill)
+	signal.Notify(p.c, os.Interrupt, os.Kill)
 
 	go func() {
 		<-p.c
+
 		if isDev {
 			fmt.Println("Shutting Down!")
 		}
@@ -173,16 +176,19 @@ func (p *Pico) StopOnIntWithFunc(fn func()) {
 }
 
 func (p *Pico) Stop() {
+
 	fmt.Println("Shutting Down server")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	err := p.server.Shutdown(ctx)
+
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	cancel()
 
 	//p.server.Stop(time.Second * 2)
-	fmt.Println("Waiting on Stop Channel")
+	fmt.Println("Shutdown complete")
 	flash.Clear()
 	//<-p.server.StopChan()
 }

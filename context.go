@@ -9,6 +9,7 @@ import "github.com/googollee/go-socket.io"
 import "time"
 import "strconv"
 import "github.com/pkg/errors"
+import "github.com/gorilla/websocket"
 
 type Context struct {
 	w         http.ResponseWriter
@@ -158,6 +159,11 @@ func (c *Context) GetCookie(name string) string {
 		}
 	}
 	return ""
+}
+
+func (c *Context) Upgrade() (*websocket.Conn, error) {
+	conn, err := upgrader.Upgrade(c.w, c.r, nil)
+	return conn, err
 }
 
 func (c *Context) RemoveCookie(name string) {
