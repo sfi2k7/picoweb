@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
+	mgo "gopkg.in/mgo.v2"
 
 	"strings"
 
@@ -19,6 +20,7 @@ import (
 )
 
 var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
+var baseSession *mgo.Session
 
 var (
 	RequestCount int
@@ -137,6 +139,7 @@ func (p *Pico) Listen(port int) error {
 	// 	Server:  &http.Server{},
 	// }
 	flash = make(Flash)
+
 	return p.server.ListenAndServe()
 }
 

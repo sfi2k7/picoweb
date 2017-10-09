@@ -1,15 +1,20 @@
 package picoweb
 
-import "net/http"
-import "io/ioutil"
-import "html/template"
-import "fmt"
-import "encoding/json"
-import "github.com/googollee/go-socket.io"
-import "time"
-import "strconv"
-import "github.com/pkg/errors"
-import "github.com/gorilla/websocket"
+import (
+	"encoding/json"
+	"fmt"
+	"html/template"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/googollee/go-socket.io"
+	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
+
+	mgo "gopkg.in/mgo.v2"
+)
 
 type Context struct {
 	w         http.ResponseWriter
@@ -159,6 +164,10 @@ func (c *Context) GetCookie(name string) string {
 		}
 	}
 	return ""
+}
+
+func (c *Context) Mongo() (*mgo.Session, error) {
+	return getSession()
 }
 
 func (c *Context) Upgrade() (*websocket.Conn, error) {
