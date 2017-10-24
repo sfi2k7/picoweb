@@ -25,6 +25,6 @@ func getSession() (*mgo.Session, error) {
 
 func createBase() error {
 	var err error
-	baseSession, err = mgo.Dial("mongodb://127.0.0.1")
+	baseSession, err = mgo.Dial(mongoURL)
 	return err
 }

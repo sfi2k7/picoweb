@@ -19,13 +19,14 @@ import (
 	"github.com/googollee/go-socket.io"
 )
 
-var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
+var Upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
 var baseSession *mgo.Session
 
 var (
 	RequestCount int
 	isDev        bool
 	flash        Flash
+	mongoURL     string
 )
 
 type Pico struct {

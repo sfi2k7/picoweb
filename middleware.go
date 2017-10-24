@@ -45,6 +45,7 @@ func socket_middle(fn func(c Socket)) func(socketio.Socket) {
 		fn(cs)
 	}
 }
+
 func socket_middle_error(fn func(c Socket, err error)) func(socketio.Socket, error) {
 	return func(socket socketio.Socket, err error) {
 		cs := Socket{Socket: socket}
