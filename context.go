@@ -176,7 +176,7 @@ func (c *Context) Mongo() (*mgo.Session, error) {
 }
 
 func (c *Context) Upgrade() (*websocket.Conn, error) {
-	conn, err := Upgrader.Upgrade(c.w, c.r, nil)
+	conn, err := upgrader.Upgrade(c.w, c.r, nil)
 	return conn, err
 }
 

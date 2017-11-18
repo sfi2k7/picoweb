@@ -19,7 +19,7 @@ import (
 	"github.com/googollee/go-socket.io"
 )
 
-var Upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
+var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
 var baseSession *mgo.Session
 
 var (
@@ -30,7 +30,7 @@ var (
 )
 
 type Pico struct {
-	mux          *httprouter.Router
+	Mux          *httprouter.Router
 	server       *http.Server
 	c            chan os.Signal
 	sio          *socketio.Server
@@ -42,24 +42,28 @@ type Pico struct {
 
 type PicoHandler func(c *Context)
 
+func (p *Pico) MongoURL(murl string) {
+	mongoURL = murl
+}
+
 func (p *Pico) Get(pattern string, fn PicoHandler) {
-	p.mux.GET(pattern, middle(fn))
+	p.Mux.GET(pattern, middle(fn))
 }
 
 func (p *Pico) Post(pattern string, fn PicoHandler) {
-	p.mux.POST(pattern, middle(fn))
+	p.Mux.POST(pattern, middle(fn))
 }
 
 func (p *Pico) Options(pattern string, fn PicoHandler) {
-	p.mux.OPTIONS(pattern, middle(fn))
+	p.Mux.OPTIONS(pattern, middle(fn))
 }
 
 func (p *Pico) Put(pattern string, fn PicoHandler) {
-	p.mux.PUT(pattern, middle(fn))
+	p.Mux.PUT(pattern, middle(fn))
 }
 
 func (p *Pico) Delete(pattern string, fn PicoHandler) {
-	p.mux.DELETE(pattern, middle(fn))
+	p.Mux.DELETE(pattern, middle(fn))
 }
 
 func (p *Pico) Static(urlPath, diskPath string) {
@@ -71,13 +75,13 @@ func (p *Pico) Static(urlPath, diskPath string) {
 		urlPath = "/" + urlPath
 	}
 
-	p.mux.ServeFiles(urlPath+"/*filepath", http.Dir(diskPath))
+	p.Mux.ServeFiles(urlPath+"/*filepath", http.Dir(diskPath))
 }
 
 func (p *Pico) EnableSocketIoOn(url string) {
 	var err error
 	p.sio, err = socketio.NewServer(nil)
-	p.mux.GET(url, middlehttp(p.sio))
+	p.Mux.GET(url, middlehttp(p.sio))
 	fmt.Println(err)
 }
 
@@ -132,7 +136,7 @@ func (p *Pico) Listen(port int) error {
 
 	p.server = &http.Server{
 		Addr:    ":" + strconv.Itoa(port),
-		Handler: p.mux,
+		Handler: p.Mux,
 	}
 
 	// p.server = &graceful.Server{
@@ -199,5 +203,5 @@ func (p *Pico) Stop() {
 
 func New() *Pico {
 	isDev = true
-	return &Pico{mux: httprouter.New()}
+	return &Pico{Mux: httprouter.New()}
 }
