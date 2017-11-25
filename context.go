@@ -184,6 +184,10 @@ func (c *Context) RemoveCookie(name string) {
 	c.SetCookie(name, "", -(time.Hour * 36))
 }
 
+func (c *Context) Redirect(url string, code int) {
+	http.Redirect(c.w, c.r, url, code)
+}
+
 type Socket struct {
 	socketio.Socket
 }
