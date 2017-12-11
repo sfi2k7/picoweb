@@ -23,10 +23,12 @@ var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: tim
 var baseSession *mgo.Session
 
 var (
-	RequestCount int
-	isDev        bool
-	flash        Flash
-	mongoURL     string
+	RequestCount  int
+	isDev         bool
+	flash         Flash
+	mongoURL      string
+	redisURL      string
+	redisPassword string
 )
 
 type Pico struct {
@@ -44,6 +46,13 @@ type PicoHandler func(c *Context)
 
 func (p *Pico) MongoURL(murl string) {
 	mongoURL = murl
+}
+
+func (p *Pico) RedisURL(rurl string, redispassword ...string) {
+	redisURL = rurl
+	if len(redispassword) > 0 {
+		redisPassword = redispassword[0]
+	}
 }
 
 func (p *Pico) Get(pattern string, fn PicoHandler) {

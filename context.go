@@ -7,7 +7,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
+
+	"gopkg.in/redis.v4"
 
 	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/websocket"
@@ -21,6 +24,8 @@ type Context struct {
 	r         *http.Request
 	params    map[string]string
 	SessionId string
+	s         *mgo.Session
+	red       *redis.Client
 }
 
 func (c *Context) Body() ([]byte, error) {
@@ -79,6 +84,15 @@ func (c *Context) RemoteIP() string {
 
 func (c *Context) R() *http.Request {
 	return c.r
+}
+
+func (c *Context) URLHashPart() string {
+	url := c.r.URL.Path
+	i := strings.LastIndex(url, "#")
+	if i > 0 {
+		return url[i:]
+	}
+	return ""
 }
 
 func (c *Context) BasicAuth() (string, string, bool) {
@@ -172,7 +186,26 @@ func (c *Context) GetCookie(name string) string {
 }
 
 func (c *Context) Mongo() (*mgo.Session, error) {
-	return getSession()
+	if c.s != nil {
+		return c.s, nil
+	}
+	s, err := getSession()
+	c.s = s
+	return s, err
+}
+
+func (c *Context) Redis() (*redis.Client, error) {
+	if c.red != nil {
+		return c.red, nil
+	}
+
+	c.red = redis.NewClient(&redis.Options{
+		Addr:     redisURL,
+		DB:       0,
+		Network:  "tcp",
+		Password: redisPassword,
+	})
+	return c.red, c.red.Ping().Err()
 }
 
 func (c *Context) Upgrade() (*websocket.Conn, error) {

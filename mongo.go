@@ -10,17 +10,23 @@ func getSession() (*mgo.Session, error) {
 	var err error
 	if baseSession == nil {
 		err = createBase()
-		fmt.Println(err)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		baseSession.SetMode(mgo.Strong, false)
 	}
 
 	if baseSession == nil {
 		fmt.Println("Base Session is still null")
 		return nil, err
 	}
+
 	if err = baseSession.Ping(); err != nil {
 		return nil, err
 	}
-	return baseSession.Clone(), nil
+
+	return baseSession.Copy(), nil
 }
 
 func createBase() error {
