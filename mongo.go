@@ -32,5 +32,8 @@ func getSession() (*mgo.Session, error) {
 func createBase() error {
 	var err error
 	baseSession, err = mgo.Dial(mongoURL)
+	if err != nil {
+		fmt.Println("Creating Base", err)
+	}
 	return err
 }
