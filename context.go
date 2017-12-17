@@ -169,9 +169,6 @@ func (c *Context) SetCookie(name, value string, expireIn time.Duration) {
 }
 
 func (c *Context) GetCookie(name string) string {
-	for _, co := range c.r.Cookies() {
-		fmt.Println("COOKIE", co.Name, co.Value)
-	}
 	cookie, err := c.r.Cookie(name)
 	if err != nil {
 		fmt.Println("COOKIE ERROR", err)
@@ -186,7 +183,7 @@ func (c *Context) GetCookie(name string) string {
 			}
 		}
 	}
-	return ""
+	return val
 }
 
 func (c *Context) Mongo() (*mgo.Session, error) {
