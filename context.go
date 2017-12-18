@@ -1,6 +1,8 @@
 package picoweb
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -26,6 +28,15 @@ type Context struct {
 	SessionId string
 	s         *mgo.Session
 	red       *redis.Client
+	machineID string
+}
+
+func (c *Context) SessionHash() string {
+	hasher := sha1.New()
+	hasher.Write([]byte(c.r.UserAgent()))
+	hasher.Write([]byte(c.r.RemoteAddr))
+	hash := hasher.Sum(nil)
+	return hex.EncodeToString(hash)
 }
 
 func (c *Context) Body() ([]byte, error) {
