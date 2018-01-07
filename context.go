@@ -221,6 +221,9 @@ func (c *Context) Redis() (*redis.Client, error) {
 }
 
 func (c *Context) Upgrade() (*websocket.Conn, error) {
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
 	conn, err := upgrader.Upgrade(c.w, c.r, nil)
 	return conn, err
 }
