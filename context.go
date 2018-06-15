@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -177,6 +178,14 @@ func (c *Context) SetCookie(name, value string, expireIn time.Duration) {
 		Unparsed: []string{value},
 	}
 	http.SetCookie(c.w, cookie)
+}
+
+func (c *Context) URL() *url.URL {
+	return c.r.URL
+}
+
+func (c *Context) HasPrefix(prefix string) bool {
+	return strings.Index(c.r.URL.Path, prefix) == 0
 }
 
 func (c *Context) GetCookie(name string) string {
