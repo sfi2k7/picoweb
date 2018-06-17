@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -186,6 +188,33 @@ func (c *Context) URL() *url.URL {
 
 func (c *Context) HasPrefix(prefix string) bool {
 	return strings.Index(c.r.URL.Path, prefix) == 0
+}
+
+func (c *Context) IsStatic() bool {
+	p := c.r.URL.Path
+	return strings.Index(p, ".") > 0 && strings.Index(p, ".") > len(p)-6
+}
+
+func (c *Context) GetStaticFileExt() string {
+	return path.Ext(c.r.URL.Path)
+}
+
+func (c *Context) Host() string {
+	return c.r.Host
+}
+
+func (c *Context) Path() string {
+	return c.r.URL.Path
+}
+
+func (c *Context) W() http.ResponseWriter {
+	return c.w
+}
+
+func (c *Context) GetStaticDirFile() (string, string) {
+	p := c.r.URL.Path
+	dir, file := filepath.Split(p)
+	return dir, file
 }
 
 func (c *Context) GetCookie(name string) string {
