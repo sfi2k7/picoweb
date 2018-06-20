@@ -192,7 +192,14 @@ func (c *Context) HasPrefix(prefix string) bool {
 
 func (c *Context) IsStatic() bool {
 	p := c.r.URL.Path
-	return strings.Index(p, ".") > 0 && strings.Index(p, ".") > len(p)-6
+	lastSlash := strings.LastIndex(p, "/")
+
+	if lastSlash < 1 {
+		return false
+	}
+
+	fielName := p[lastSlash:]
+	return strings.Index(fielName, ".") > 0
 }
 
 func (c *Context) GetStaticFileExt() string {
@@ -215,6 +222,16 @@ func (c *Context) GetStaticDirFile() (string, string) {
 	p := c.r.URL.Path
 	dir, file := filepath.Split(p)
 	return dir, file
+}
+
+func (c *Context) GetStaticFile() string {
+	_, file := c.GetStaticDirFile()
+	return file
+}
+
+func (c *Context) GetStaticFilePath() string {
+	dir, _ := c.GetStaticDirFile()
+	return dir
 }
 
 func (c *Context) GetCookie(name string) string {
