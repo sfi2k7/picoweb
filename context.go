@@ -135,10 +135,10 @@ func (c *Context) Status(statusCode int) {
 	c.w.WriteHeader(statusCode)
 }
 
-func (c *Context) Json(data interface{}) {
+func (c *Context) Json(data interface{}) (int, error) {
 	jsoned, _ := json.Marshal(data)
 	c.ResponseHeader().Add("content-type", "application/json")
-	fmt.Fprint(c, string(jsoned))
+	return fmt.Fprint(c, string(jsoned))
 }
 
 func (c *Context) View(filePath string, data interface{}) {
