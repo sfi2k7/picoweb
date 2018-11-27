@@ -135,6 +135,14 @@ func (c *Context) Status(statusCode int) {
 	c.w.WriteHeader(statusCode)
 }
 
+func (c *Context) Status404() {
+	c.w.WriteHeader(http.StatusNotFound)
+}
+
+func (c *Context) Status403() {
+	c.w.WriteHeader(http.StatusUnauthorized)
+}
+
 func (c *Context) Json(data interface{}) (int, error) {
 	jsoned, _ := json.Marshal(data)
 	c.ResponseHeader().Add("content-type", "application/json")
