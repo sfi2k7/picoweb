@@ -17,7 +17,6 @@ import (
 
 	"gopkg.in/redis.v4"
 
-	"github.com/googollee/go-socket.io"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 
@@ -299,6 +298,6 @@ func (c *Context) Redirect(url string, code int) {
 	http.Redirect(c.w, c.r, url, code)
 }
 
-type Socket struct {
-	socketio.Socket
-}
+// type Socket struct {
+// 	socketio.Socket
+// }

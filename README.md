@@ -31,7 +31,7 @@ Teeny Tiny Web Wrapper around httprouter
     }
 ```
 
-### SocketIO
+### SocketIO - Removes in latest Version
 
 ```GO
 
