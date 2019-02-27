@@ -15,8 +15,6 @@ import (
 	mgo "gopkg.in/mgo.v2"
 
 	"strings"
-
-	"github.com/googollee/go-socket.io"
 )
 
 var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
@@ -32,10 +30,10 @@ var (
 )
 
 type Pico struct {
-	Mux          *httprouter.Router
-	server       *http.Server
-	c            chan os.Signal
-	sio          *socketio.Server
+	Mux    *httprouter.Router
+	server *http.Server
+	c      chan os.Signal
+	//sio          *socketio.Server
 	trackSession bool
 	cookieName   string
 	pre          PicoHandler
@@ -87,24 +85,24 @@ func (p *Pico) Static(urlPath, diskPath string) {
 	p.Mux.ServeFiles(urlPath+"/*filepath", http.Dir(diskPath))
 }
 
-func (p *Pico) EnableSocketIoOn(url string) {
-	var err error
-	p.sio, err = socketio.NewServer(nil)
-	p.Mux.GET(url, middlehttp(p.sio))
-	fmt.Println(err)
-}
+// func (p *Pico) EnableSocketIoOn(url string) {
+// 	var err error
+// 	p.sio, err = socketio.NewServer(nil)
+// 	p.Mux.GET(url, middlehttp(p.sio))
+// 	fmt.Println(err)
+// }
 
-func (p *Pico) OnConnection(fn func(s Socket)) {
-	p.sio.On("connection", socket_middle(fn))
-}
+// func (p *Pico) OnConnection(fn func(s Socket)) {
+// 	p.sio.On("connection", socket_middle(fn))
+// }
 
-func (p *Pico) OnError(fn func(s Socket, e error)) {
-	p.sio.On("error", socket_middle_error(fn))
-}
+// func (p *Pico) OnError(fn func(s Socket, e error)) {
+// 	p.sio.On("error", socket_middle_error(fn))
+// }
 
-func (p *Pico) On(event string, fn func(msg string)) {
-	p.sio.On(event, fn)
-}
+// func (p *Pico) On(event string, fn func(msg string)) {
+// 	p.sio.On(event, fn)
+// }
 
 func (p *Pico) GetFlash(sessionId string) interface{} {
 	return flash.Get(sessionId)
