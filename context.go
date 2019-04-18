@@ -55,6 +55,18 @@ func (c *Context) Query(key string) string {
 	return c.r.URL.Query().Get(key)
 }
 
+func (c *Context) QueryCaseIn(key string) string {
+	for k, v := range c.r.URL.Query() {
+		if strings.ToLower(k) == strings.ToLower(key) {
+			if len(v) > 0 {
+				return v[0]
+			}
+			return ""
+		}
+	}
+	return ""
+}
+
 func (c *Context) QueryInt(key string) (int, error) {
 	v := c.Query(key)
 	if len(v) == 0 {
