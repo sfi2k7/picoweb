@@ -2,7 +2,9 @@ package picoweb
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -130,6 +132,23 @@ func (p *Pico) ListenS(port string) {
 		panic("PORT is OUT of Range")
 	}
 	p.Listen(int(po))
+}
+
+func (p *Pico) ListenTLS(port, cert, key string) {
+	cer, err := tls.LoadX509KeyPair(cert, key)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	config := &tls.Config{Certificates: []tls.Certificate{cer}}
+	p.server = &http.Server{
+		Addr:      port,
+		Handler:   p.Mux,
+		TLSConfig: config,
+	}
+	flash = make(Flash)
+	p.server.ListenAndServeTLS(cert, key)
 }
 
 func (p *Pico) Listen(port int) error {
