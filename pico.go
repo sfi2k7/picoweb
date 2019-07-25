@@ -23,7 +23,7 @@ var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: tim
 var baseSession *mgo.Session
 
 var (
-	RequestCount  int
+	RequestCount  uint64
 	isDev         bool
 	flash         Flash
 	mongoURL      string
@@ -202,9 +202,11 @@ func (p *Pico) StopOnIntWithFunc(fn func()) {
 		close(p.c)
 
 		if fn != nil {
+			fmt.Println("Calling INT callback")
 			fn()
 		}
 
+		fmt.Println("Exiting to OS")
 		os.Exit(0)
 	}()
 }
@@ -213,6 +215,7 @@ func (p *Pico) Stop() {
 
 	fmt.Println("Shutting Down server")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+
 	err := p.server.Shutdown(ctx)
 
 	if err != nil {
@@ -220,7 +223,6 @@ func (p *Pico) Stop() {
 	}
 
 	cancel()
-
 	//p.server.Stop(time.Second * 2)
 	fmt.Println("Shutdown complete")
 	flash.Clear()

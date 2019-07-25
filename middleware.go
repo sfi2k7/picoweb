@@ -3,6 +3,7 @@ package picoweb
 import (
 	"fmt"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -11,7 +12,8 @@ import (
 func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		RequestCount++
+		atomic.AddUint64(&RequestCount, 1)
+
 		start := time.Now()
 		c := &Context{w: w, r: r, params: make(map[string]string)}
 
@@ -32,14 +34,13 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 		}
 
 		if isDev {
-			fmt.Println(time.Since(start), r.URL, RequestCount)
+			fmt.Println(time.Since(start), r.URL, atomic.LoadUint64(&RequestCount))
 		}
 	}
 }
 
 func middlehttp(fn http.Handler) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		RequestCount++
 		//start := time.Now()
 		fn.ServeHTTP(w, r)
 		//fmt.Println(time.Since(start), r.URL, RequestCount)
