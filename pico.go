@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"strconv"
@@ -184,7 +185,7 @@ func (p *Pico) StopOnInt() {
 
 func (p *Pico) StopOnIntWithFunc(fn func()) {
 	p.c = make(chan os.Signal, 1)
-	signal.Notify(p.c, os.Interrupt, os.Kill)
+	signal.Notify(p.c, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
 
 	go func() {
 		<-p.c
