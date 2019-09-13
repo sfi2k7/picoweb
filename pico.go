@@ -13,14 +13,13 @@ import (
 
 	"strconv"
 
-	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
 	mgo "gopkg.in/mgo.v2"
 
 	"strings"
 )
 
-var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
+//var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
 var baseSession *mgo.Session
 
 var (
@@ -30,6 +29,10 @@ var (
 	mongoURL      string
 	redisURL      string
 	redisPassword string
+)
+var (
+	startedOn         time.Time
+	WSConnectionCount uint64
 )
 
 type Pico struct {
@@ -41,6 +44,12 @@ type Pico struct {
 	cookieName   string
 	pre          PicoHandler
 	post         PicoHandler
+
+	onMsg       func(c *WSMsgContext)
+	onConnect   func(c *WSContext)
+	onError     func(err error)
+	onClose     func(c *WSContext)
+	connections *mmap
 }
 
 type PicoHandler func(c *Context)
@@ -74,6 +83,15 @@ func (p *Pico) Put(pattern string, fn PicoHandler) {
 
 func (p *Pico) Delete(pattern string, fn PicoHandler) {
 	p.Mux.DELETE(pattern, middle(fn))
+}
+
+func (p *Pico) HandleWS(pattern string) {
+	if p.connections != nil {
+		return
+	}
+
+	p.connections = newmmap()
+	p.Get(pattern, p.mainEndpoint)
 }
 
 func (p *Pico) Static(urlPath, diskPath string) {
@@ -224,6 +242,7 @@ func (p *Pico) Stop() {
 	}
 
 	cancel()
+
 	//p.server.Stop(time.Second * 2)
 	fmt.Println("Shutdown complete")
 	flash.Clear()

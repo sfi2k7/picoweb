@@ -295,9 +295,12 @@ func (c *Context) Redis() (*redis.Client, error) {
 }
 
 func (c *Context) Upgrade() (*websocket.Conn, error) {
+	var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
+
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
+
 	conn, err := upgrader.Upgrade(c.w, c.r, nil)
 	return conn, err
 }
