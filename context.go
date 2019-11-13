@@ -151,7 +151,15 @@ func (c *Context) Status404() {
 }
 
 func (c *Context) Status403() {
+	c.w.WriteHeader(http.StatusForbidden)
+}
+
+func (c *Context) Status401() {
 	c.w.WriteHeader(http.StatusUnauthorized)
+}
+
+func (c *Context) StatusServerError() {
+	c.w.WriteHeader(http.StatusInternalServerError)
 }
 
 func (c *Context) Json(data interface{}) (int, error) {

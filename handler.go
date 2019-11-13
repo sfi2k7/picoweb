@@ -9,12 +9,13 @@ import (
 )
 
 type handler struct {
-	ID     string
-	c      *websocket.Conn
-	ex     chan bool
-	msgs   chan []byte
-	isOpen bool
-	p      *Pico
+	ID          string
+	c           *websocket.Conn
+	ex          chan bool
+	msgs        chan []byte
+	isOpen      bool
+	p           *Pico
+	isConnected bool
 }
 
 func ID() string {
@@ -28,6 +29,7 @@ func (h *handler) init(c *websocket.Conn) string {
 	h.c = c
 	h.ID = ID()
 	h.isOpen = true
+	h.isConnected = true
 	return h.ID
 }
 
@@ -44,6 +46,8 @@ func (h *handler) dispose() {
 	if isDev == true {
 		fmt.Println("Clean up Done")
 	}
+	h.isConnected = false
+	h.isOpen = false
 }
 
 func (h *handler) handle() {
@@ -59,6 +63,7 @@ func (h *handler) handle() {
 
 			if err != nil {
 				h.ex <- true
+				h.isConnected = false
 				break
 			}
 
@@ -67,23 +72,24 @@ func (h *handler) handle() {
 			}
 
 			if h.p.onMsg != nil {
-				h.p.onMsg(&WSMsgContext{
+				go h.p.onMsg(&WSMsgContext{
 					MessageBody: body,
 					MessageType: t,
 					WSContext: &WSContext{
-						Conn:         h.c,
+						conn:         h.c,
 						ConnectionID: h.ID,
+						p:            h.p,
 					},
 				})
 			}
-			//TODO: Got Message
 		}
 	}()
 
 	if h.p.onConnect != nil {
 		h.p.onConnect(&WSContext{
-			Conn:         h.c,
+			conn:         h.c,
 			ConnectionID: h.ID,
+			p:            h.p,
 		})
 	}
 
@@ -94,11 +100,12 @@ func (h *handler) handle() {
 				return
 			}
 
-			err := h.c.WriteMessage(1, msg)
+			err := h.c.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
 				h.ex <- true
 			}
 		case <-h.ex:
+			h.isConnected = false
 			return
 		}
 	}

@@ -17,16 +17,6 @@ var (
 )
 
 type WSConn websocket.Conn
-type WSContext struct {
-	ConnectionID string
-	Conn         *websocket.Conn
-}
-
-type WSMsgContext struct {
-	*WSContext
-	MessageType int
-	MessageBody []byte
-}
 
 func (p *Pico) OnWSMsg(fn func(c *WSMsgContext)) {
 	p.onMsg = fn
@@ -53,10 +43,19 @@ func (p *Pico) CloseWSConn(cid string) {
 }
 
 func (p *Pico) mainEndpoint(c *Context) {
+	var memUsage runtime.MemStats
+	if isDev == true {
+		runtime.ReadMemStats(&memUsage)
+	}
+
 	atomic.AddUint64(&WSConnectionCount, 1)
 
 	if isDev == true {
-		fmt.Println("Go Count", runtime.NumGoroutine())
+		fmt.Println("Alloc", memUsage.Alloc/1024*1024, "Live", memUsage.Mallocs-memUsage.Frees)
+	}
+
+	if isDev == true {
+		fmt.Println("Go Routine Count", runtime.NumGoroutine())
 	}
 
 	con, err := c.Upgrade()
@@ -74,6 +73,9 @@ func (p *Pico) mainEndpoint(c *Context) {
 	}
 
 	p.wsLoop(con)
+
+	atomic.AddUint64(&WSConnectionCount, ^uint64(0))
+
 }
 
 func (p *Pico) wsLoop(con *websocket.Conn) {
@@ -90,14 +92,15 @@ func (p *Pico) wsLoop(con *websocket.Conn) {
 		p.connections.remove(id)
 
 		if p.onClose != nil {
-			p.onClose(&WSContext{Conn: con, ConnectionID: id})
-		}
-
-		if isDev == true {
-			fmt.Println("Connection Closed", p.connections.count())
+			p.onClose(&WSContext{p: p, conn: con, ConnectionID: id})
 		}
 
 		h.dispose()
+		h.isConnected = false
+		if isDev == true {
+			fmt.Println("Connection Closed and Disposed", p.connections.count())
+		}
+		//h = nil
 	}()
 
 	if isDev == true {
@@ -112,6 +115,7 @@ func (p *Pico) SendWS(cid string, body []byte) error {
 	if h == nil {
 		return errors.New("Connection not found")
 	}
+
 	h.msgs <- body
 	return nil
 }
