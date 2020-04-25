@@ -55,6 +55,7 @@ func (h *handler) handle() {
 		if data := recover(); data != nil {
 			fmt.Println("Recover", data)
 		}
+		fmt.Println("Exiting from Handle")
 	}()
 
 	go func() {

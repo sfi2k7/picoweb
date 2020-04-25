@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime"
 	"sync/atomic"
 
 	"github.com/gorilla/websocket"
@@ -54,9 +55,9 @@ func (p *Pico) mainEndpoint(c *Context) {
 	// 	fmt.Println("Alloc", memUsage.Alloc/1024*1024, "Live", memUsage.Mallocs-memUsage.Frees)
 	// }
 
-	// if isDev == true {
-	// 	fmt.Println("Go Routine Count", runtime.NumGoroutine())
-	// }
+	if isDev == true {
+		fmt.Println("Go Routine Count", runtime.NumGoroutine())
+	}
 
 	con, err := c.Upgrade()
 
