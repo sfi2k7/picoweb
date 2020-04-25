@@ -186,11 +186,11 @@ func (c *Context) ResponseHeader() http.Header {
 	return c.w.Header()
 }
 
-func (c *Context) WriteHeader(n int) {
+func (c Context) WriteHeader(n int) {
 	c.w.WriteHeader(n)
 }
 
-func (c *Context) Write(b []byte) (int, error) {
+func (c Context) Write(b []byte) (int, error) {
 	return c.w.Write(b)
 }
 

@@ -1,9 +1,9 @@
 package picoweb
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"runtime"
 	"sync/atomic"
 
 	"github.com/gorilla/websocket"
@@ -43,20 +43,20 @@ func (p *Pico) CloseWSConn(cid string) {
 }
 
 func (p *Pico) mainEndpoint(c *Context) {
-	var memUsage runtime.MemStats
-	if isDev == true {
-		runtime.ReadMemStats(&memUsage)
-	}
+	// var memUsage runtime.MemStats
+	// if isDev == true {
+	// 	runtime.ReadMemStats(&memUsage)
+	// }
 
 	atomic.AddUint64(&WSConnectionCount, 1)
 
-	if isDev == true {
-		fmt.Println("Alloc", memUsage.Alloc/1024*1024, "Live", memUsage.Mallocs-memUsage.Frees)
-	}
+	// if isDev == true {
+	// 	fmt.Println("Alloc", memUsage.Alloc/1024*1024, "Live", memUsage.Mallocs-memUsage.Frees)
+	// }
 
-	if isDev == true {
-		fmt.Println("Go Routine Count", runtime.NumGoroutine())
-	}
+	// if isDev == true {
+	// 	fmt.Println("Go Routine Count", runtime.NumGoroutine())
+	// }
 
 	con, err := c.Upgrade()
 
@@ -75,7 +75,6 @@ func (p *Pico) mainEndpoint(c *Context) {
 	p.wsLoop(con)
 
 	atomic.AddUint64(&WSConnectionCount, ^uint64(0))
-
 }
 
 func (p *Pico) wsLoop(con *websocket.Conn) {
@@ -118,4 +117,9 @@ func (p *Pico) SendWS(cid string, body []byte) error {
 
 	h.msgs <- body
 	return nil
+}
+
+func (p *Pico) SendJson(cid string, o interface{}) error {
+	jsoned, _ := json.Marshal(o)
+	return p.SendWS(cid, jsoned)
 }

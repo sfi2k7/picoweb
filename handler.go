@@ -83,6 +83,7 @@ func (h *handler) handle() {
 				})
 			}
 		}
+		fmt.Println("WS Read Loop Exited")
 	}()
 
 	if h.p.onConnect != nil {
