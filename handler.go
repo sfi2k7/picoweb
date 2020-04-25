@@ -55,7 +55,6 @@ func (h *handler) handle() {
 		if data := recover(); data != nil {
 			fmt.Println("Recover", data)
 		}
-		fmt.Println("Exiting from Handle")
 	}()
 
 	go func() {
@@ -84,7 +83,6 @@ func (h *handler) handle() {
 				})
 			}
 		}
-		fmt.Println("WS Read Loop Exited")
 	}()
 
 	if h.p.onConnect != nil {

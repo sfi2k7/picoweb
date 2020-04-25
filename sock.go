@@ -44,9 +44,6 @@ func (p *Pico) CloseWSConn(cid string) {
 }
 
 func (p *Pico) mainEndpoint(c *Context) {
-	defer func() {
-		fmt.Println("Exiting Main Endpoint")
-	}()
 	// var memUsage runtime.MemStats
 	// if isDev == true {
 	// 	runtime.ReadMemStats(&memUsage)
