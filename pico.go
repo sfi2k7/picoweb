@@ -233,15 +233,15 @@ func (p *Pico) StopOnIntWithFunc(fn func()) {
 func (p *Pico) Stop() {
 
 	fmt.Println("Shutting Down server")
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 	err := p.server.Shutdown(ctx)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	cancel()
+	// cancel()
 
 	//p.server.Stop(time.Second * 2)
 	fmt.Println("Shutdown complete")

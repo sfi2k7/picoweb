@@ -15,7 +15,7 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 		atomic.AddUint64(&RequestCount, 1)
 
 		start := time.Now()
-		c := &Context{w: w, r: r, params: make(map[string]string)}
+		c := &Context{w: w, r: r, params: make(map[string]string), Start: time.Now()}
 
 		for _, par := range ps {
 			c.params[par.Key] = par.Value

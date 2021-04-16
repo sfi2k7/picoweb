@@ -31,6 +31,7 @@ type Context struct {
 	s         *mgo.Session
 	red       *redis.Client
 	machineID string
+	Start     time.Time
 }
 
 func (c *Context) SessionHash() string {
