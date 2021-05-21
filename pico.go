@@ -94,6 +94,10 @@ func (p *Pico) HandleWS(pattern string) {
 	p.Get(pattern, p.mainEndpoint)
 }
 
+func (p *Pico) StaticDefault(diskPath string) {
+	p.Mux.ServeFiles("/*filepath", http.Dir(diskPath))
+}
+
 func (p *Pico) Static(urlPath, diskPath string) {
 	if urlPath[len(urlPath)-1] == '/' {
 		urlPath = urlPath[:len(urlPath)-1]
