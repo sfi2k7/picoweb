@@ -10,7 +10,7 @@ import (
 func main() {
 	p := picoweb.New()
 	p.StopOnInt()
-	p.Get("/", func(c *picoweb.Context) {s
+	p.Get("/", func(c *picoweb.Context) {
 
 		s, err := c.Mongo()
 		if err != nil {
