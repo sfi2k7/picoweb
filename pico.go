@@ -94,6 +94,10 @@ func (p *Pico) HandleWS(pattern string) {
 	p.Get(pattern, p.mainEndpoint)
 }
 
+func (p *Pico) StaticDefault(diskPath string) {
+	p.Mux.ServeFiles("/*filepath", http.Dir(diskPath))
+}
+
 func (p *Pico) Static(urlPath, diskPath string) {
 	if urlPath[len(urlPath)-1] == '/' {
 		urlPath = urlPath[:len(urlPath)-1]
@@ -189,7 +193,7 @@ func (p *Pico) Listen(port int) error {
 	// 	Server:  &http.Server{},
 	// }
 	flash = make(Flash)
-
+	fmt.Println("Listing on " + strconv.Itoa(port))
 	return p.server.ListenAndServe()
 }
 

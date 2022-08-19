@@ -164,18 +164,23 @@ func (c *Context) StatusServerError() {
 }
 
 func (c *Context) Json(data interface{}) (int, error) {
-	jsoned, _ := json.Marshal(data)
+	jsoned, err := json.Marshal(data)
+	if err != nil {
+		return 0, err
+	}
+
 	c.ResponseHeader().Add("content-type", "application/json")
 	return fmt.Fprint(c, string(jsoned))
 }
 
-func (c *Context) View(filePath string, data interface{}) {
+func (c *Context) View(filePath string, data interface{}) error {
 	tmpl, err := template.ParseFiles(filePath)
 	if err != nil {
 		fmt.Fprint(c, err.Error())
-		return
+		return err
 	}
 	err = tmpl.Execute(c.w, data)
+	return err
 }
 
 func (c *Context) Params(name string) string {
