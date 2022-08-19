@@ -34,6 +34,9 @@ var (
 	startedOn         time.Time
 	WSConnectionCount uint64
 )
+var (
+	wshandler WsHandler
+)
 
 type Pico struct {
 	Mux    *httprouter.Router
@@ -85,11 +88,12 @@ func (p *Pico) Delete(pattern string, fn PicoHandler) {
 	p.Mux.DELETE(pattern, middle(fn))
 }
 
-func (p *Pico) HandleWS(pattern string) {
+func (p *Pico) HandleWS(pattern string, handler WsHandler) {
 	if p.connections != nil {
 		return
 	}
 
+	wshandler = handler
 	p.connections = newmmap()
 	p.Get(pattern, p.mainEndpoint)
 }
@@ -193,7 +197,10 @@ func (p *Pico) Listen(port int) error {
 	// 	Server:  &http.Server{},
 	// }
 	flash = make(Flash)
-	fmt.Println("Listing on " + strconv.Itoa(port))
+	if isDev {
+		fmt.Println("Listing on " + strconv.Itoa(port))
+	}
+
 	return p.server.ListenAndServe()
 }
 

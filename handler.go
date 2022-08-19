@@ -86,27 +86,43 @@ func (h *handler) handle() {
 				fmt.Println("Got Message")
 			}
 
-			if h.p.onMsg != nil {
-				go h.p.onMsg(&WSMsgContext{
-					MessageBody: body,
-					MessageType: t,
-					WSContext: &WSContext{
-						conn:         h.c,
-						ConnectionID: h.ID,
-						p:            h.p,
-					},
-				})
-			}
+			wshandler.Message(&WSMsgContext{
+				MessageBody: body,
+				MessageType: t,
+				WSContext: &WSContext{
+					conn:         h.c,
+					ConnectionID: h.ID,
+					p:            h.p,
+				},
+			})
+
+			// if h.p.onMsg != nil {
+			// 	go h.p.onMsg(&WSMsgContext{
+			// 		MessageBody: body,
+			// 		MessageType: t,
+			// 		WSContext: &WSContext{
+			// 			conn:         h.c,
+			// 			ConnectionID: h.ID,
+			// 			p:            h.p,
+			// 		},
+			// 	})
+			// }
 		}
 	}()
 
-	if h.p.onConnect != nil {
-		h.p.onConnect(&WSContext{
-			conn:         h.c,
-			ConnectionID: h.ID,
-			p:            h.p,
-		})
-	}
+	wshandler.Open(&WSContext{
+		conn:         h.c,
+		ConnectionID: h.ID,
+		p:            h.p,
+	})
+
+	// if h.p.onConnect != nil {
+	// 	h.p.onConnect(&WSContext{
+	// 		conn:         h.c,
+	// 		ConnectionID: h.ID,
+	// 		p:            h.p,
+	// 	})
+	// }
 
 	for {
 		select {

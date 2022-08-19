@@ -11,7 +11,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-var ()
+type WsHandler interface {
+	Open(c *WSContext)
+	Message(c *WSMsgContext)
+	Close(c *WSContext)
+	Error(error)
+}
 
 var (
 	isWsSet bool
@@ -45,17 +50,17 @@ func (p *Pico) CloseWSConn(cid string) {
 
 func (p *Pico) mainEndpoint(c *Context) {
 	// var memUsage runtime.MemStats
-	// if isDev == true {
+	// if isDev{
 	// 	runtime.ReadMemStats(&memUsage)
 	// }
 
 	atomic.AddUint64(&WSConnectionCount, 1)
 
-	// if isDev == true {
+	// if isDev{
 	// 	fmt.Println("Alloc", memUsage.Alloc/1024*1024, "Live", memUsage.Mallocs-memUsage.Frees)
 	// }
 
-	if isDev == true {
+	if isDev {
 		fmt.Println("Go Routine Count", runtime.NumGoroutine())
 	}
 
@@ -63,13 +68,14 @@ func (p *Pico) mainEndpoint(c *Context) {
 
 	if err != nil {
 		c.Status(http.StatusBadRequest)
-		if p.onError != nil {
-			p.onError(err)
-		}
+		wshandler.Error(err)
+		// if p.onError != nil {
+		// 	p.onError(err)
+		// }
 		return
 	}
 
-	if isDev == true {
+	if isDev {
 		fmt.Println("WS Count", atomic.LoadUint64(&WSConnectionCount))
 	}
 
@@ -82,7 +88,7 @@ func (p *Pico) wsLoop(con *websocket.Conn) {
 	h := &handler{p: p}
 	id := h.init(con)
 
-	if isDev == true {
+	if isDev {
 		fmt.Println("Initing WS conn", id)
 	}
 
@@ -91,19 +97,20 @@ func (p *Pico) wsLoop(con *websocket.Conn) {
 	defer func() {
 		p.connections.remove(id)
 
-		if p.onClose != nil {
-			p.onClose(&WSContext{p: p, conn: con, ConnectionID: id})
-		}
+		// if p.onClose != nil {
+		// 	p.onClose()
+		// }
+		wshandler.Close(&WSContext{p: p, conn: con, ConnectionID: id})
 
 		h.dispose()
 		h.isConnected = false
-		if isDev == true {
+		if isDev {
 			fmt.Println("Connection Closed and Disposed", p.connections.count())
 		}
 		//h = nil
 	}()
 
-	if isDev == true {
+	if isDev {
 		fmt.Println("Connection Made", p.connections.count())
 	}
 
