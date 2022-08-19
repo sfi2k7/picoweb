@@ -1,11 +1,10 @@
 package picoweb
 
 import (
+	"crypto/rand"
 	"fmt"
-	"strings"
 
 	"github.com/gorilla/websocket"
-	uuid "github.com/satori/go.uuid"
 )
 
 type handler struct {
@@ -18,9 +17,25 @@ type handler struct {
 	isConnected bool
 }
 
+// Note - NOT RFC4122 compliant
+func UUID() (uuid string) {
+
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return
+	}
+
+	uuid = fmt.Sprintf("%X%X%X%X%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+
+	return
+}
+
 func ID() string {
-	u, _ := uuid.NewV4()
-	return strings.Replace(u.String(), "-", "", -1)
+	return UUID()
+	// u, _ := uuid.NewV4()
+	// return strings.Replace(u.String(), "-", "", -1)
 }
 
 func (h *handler) init(c *websocket.Conn) string {

@@ -10,7 +10,13 @@ import (
 )
 
 func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		if r := recover(); r != nil {
+			fmt.Println("Recovering in Middle")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		atomic.AddUint64(&RequestCount, 1)
 
