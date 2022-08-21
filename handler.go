@@ -2,6 +2,7 @@ package picoweb
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 
 	"github.com/gorilla/websocket"
@@ -11,7 +12,7 @@ type handler struct {
 	ID          string
 	c           *websocket.Conn
 	ex          chan bool
-	msgs        chan []byte
+	msgs        chan interface{}
 	isOpen      bool
 	p           *Pico
 	isConnected bool
@@ -40,7 +41,7 @@ func ID() string {
 
 func (h *handler) init(c *websocket.Conn) string {
 	h.ex = make(chan bool, 1)
-	h.msgs = make(chan []byte, 10)
+	h.msgs = make(chan interface{}, 10)
 	h.c = c
 	h.ID = ID()
 	h.isOpen = true
@@ -131,7 +132,8 @@ func (h *handler) handle() {
 				return
 			}
 
-			err := h.c.WriteMessage(websocket.TextMessage, msg)
+			jsoned, _ := json.Marshal(msg)
+			err := h.c.WriteMessage(websocket.TextMessage, jsoned)
 			if err != nil {
 				h.ex <- true
 			}

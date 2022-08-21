@@ -117,13 +117,13 @@ func (p *Pico) wsLoop(con *websocket.Conn) {
 	h.handle()
 }
 
-func (p *Pico) SendWS(cid string, body []byte) error {
+func (p *Pico) SendWS(cid string, data interface{}) error {
 	h := p.connections.get(cid)
 	if h == nil {
 		return errors.New("Connection not found")
 	}
 
-	h.msgs <- body
+	h.msgs <- data
 	return nil
 }
 
