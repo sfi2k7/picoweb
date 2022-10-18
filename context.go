@@ -85,7 +85,7 @@ func (c *Context) QueryBool(key string) (bool, error) {
 	if len(v) == 0 {
 		return false, errors.New("key not found in path")
 	}
-	b, err := strconv.ParseBool(key)
+	b, err := strconv.ParseBool(v)
 	if err != nil {
 		return false, errors.New("Could not parse as Bool")
 	}
