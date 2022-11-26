@@ -53,6 +53,7 @@ type Pico struct {
 	onError     func(err error)
 	onClose     func(c *WSContext)
 	connections *mmap
+	appName     string
 }
 
 type PicoHandler func(c *Context)
@@ -210,6 +211,17 @@ func (p *Pico) Production() {
 
 func (p *Pico) StopOnInt() {
 	p.StopOnIntWithFunc(nil)
+}
+
+func (p *Pico) SetAppName(appname string) {
+	p.appName = appname
+}
+
+func (p *Pico) CustomNotFound() {
+	p.Mux.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(string("404 page not found " + p.appName)))
+	})
 }
 
 func (p *Pico) StopOnIntWithFunc(fn func()) {
