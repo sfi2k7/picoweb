@@ -9,6 +9,12 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type middlewarehandler func(c *Context) bool
+
+var premiddlewares []middlewarehandler
+var postmiddlewares []middlewarehandler
+var middlewares []middlewarehandler
+
 func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -29,7 +35,35 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 
 		//w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		p(c)
+		docontinue := true
+		for _, m := range premiddlewares {
+			docontinue = m(c)
+			if !docontinue {
+				break
+			}
+		}
+
+		if docontinue {
+			for _, m := range middlewares {
+				docontinue = m(c)
+				if !docontinue {
+					break
+				}
+			}
+		}
+
+		if docontinue {
+			p(c)
+		}
+
+		if docontinue {
+			for _, m := range postmiddlewares {
+				docontinue = m(c)
+				if !docontinue {
+					break
+				}
+			}
+		}
 
 		if c.s != nil {
 			c.s.Close()

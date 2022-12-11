@@ -1,145 +1,137 @@
 package picoweb
 
-import (
-	"crypto/rand"
-	"encoding/json"
-	"fmt"
+// type handler struct {
+// 	ID          string
+// 	c           *websocket.Conn
+// 	ex          chan bool
+// 	msgs        chan interface{}
+// 	isOpen      bool
+// 	p           *Pico
+// 	isConnected bool
+// }
 
-	"github.com/gorilla/websocket"
-)
+// // Note - NOT RFC4122 compliant
+// func UUID() (uuid string) {
 
-type handler struct {
-	ID          string
-	c           *websocket.Conn
-	ex          chan bool
-	msgs        chan interface{}
-	isOpen      bool
-	p           *Pico
-	isConnected bool
-}
+// 	b := make([]byte, 16)
+// 	_, err := rand.Read(b)
+// 	if err != nil {
+// 		fmt.Println("Error: ", err)
+// 		return
+// 	}
 
-// Note - NOT RFC4122 compliant
-func UUID() (uuid string) {
+// 	uuid = fmt.Sprintf("%X%X%X%X%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 
-	b := make([]byte, 16)
-	_, err := rand.Read(b)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return
-	}
+// 	return
+// }
 
-	uuid = fmt.Sprintf("%X%X%X%X%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+// func ID() string {
+// 	return UUID()
+// 	// u, _ := uuid.NewV4()
+// 	// return strings.Replace(u.String(), "-", "", -1)
+// }
 
-	return
-}
+// func (h *handler) init(c *websocket.Conn) string {
+// 	h.ex = make(chan bool, 1)
+// 	h.msgs = make(chan interface{}, 10)
+// 	h.c = c
+// 	h.ID = ID()
+// 	h.isOpen = true
+// 	h.isConnected = true
+// 	return h.ID
+// }
 
-func ID() string {
-	return UUID()
-	// u, _ := uuid.NewV4()
-	// return strings.Replace(u.String(), "-", "", -1)
-}
+// func (h *handler) forceExit() {
+// 	h.ex <- true
+// }
 
-func (h *handler) init(c *websocket.Conn) string {
-	h.ex = make(chan bool, 1)
-	h.msgs = make(chan interface{}, 10)
-	h.c = c
-	h.ID = ID()
-	h.isOpen = true
-	h.isConnected = true
-	return h.ID
-}
+// func (h *handler) dispose() {
+// 	//h.isOpen = false
+// 	close(h.ex)
+// 	close(h.msgs)
+// 	//time.Sleep(time.Second * 10)
+// 	h.c = nil
+// 	if isDev == true {
+// 		fmt.Println("Clean up Done")
+// 	}
+// 	h.isConnected = false
+// 	h.isOpen = false
+// }
 
-func (h *handler) forceExit() {
-	h.ex <- true
-}
+// func (h *handler) handle() {
+// 	defer func() {
+// 		if data := recover(); data != nil {
+// 			fmt.Println("Recover", data)
+// 		}
+// 	}()
 
-func (h *handler) dispose() {
-	//h.isOpen = false
-	close(h.ex)
-	close(h.msgs)
-	//time.Sleep(time.Second * 10)
-	h.c = nil
-	if isDev == true {
-		fmt.Println("Clean up Done")
-	}
-	h.isConnected = false
-	h.isOpen = false
-}
+// 	go func() {
+// 		for {
+// 			t, body, err := h.c.ReadMessage()
 
-func (h *handler) handle() {
-	defer func() {
-		if data := recover(); data != nil {
-			fmt.Println("Recover", data)
-		}
-	}()
+// 			if err != nil {
+// 				h.ex <- true
+// 				h.isConnected = false
+// 				break
+// 			}
 
-	go func() {
-		for {
-			t, body, err := h.c.ReadMessage()
+// 			if isDev == true {
+// 				fmt.Println("Got Message")
+// 			}
 
-			if err != nil {
-				h.ex <- true
-				h.isConnected = false
-				break
-			}
+// 			wshandler.Message(&WSMsgContext{
+// 				MessageBody: body,
+// 				MessageType: t,
+// 				WSContext: &WSContext{
+// 					conn:         h.c,
+// 					ConnectionID: h.ID,
+// 					p:            h.p,
+// 				},
+// 			})
 
-			if isDev == true {
-				fmt.Println("Got Message")
-			}
+// 			// if h.p.onMsg != nil {
+// 			// 	go h.p.onMsg(&WSMsgContext{
+// 			// 		MessageBody: body,
+// 			// 		MessageType: t,
+// 			// 		WSContext: &WSContext{
+// 			// 			conn:         h.c,
+// 			// 			ConnectionID: h.ID,
+// 			// 			p:            h.p,
+// 			// 		},
+// 			// 	})
+// 			// }
+// 		}
+// 	}()
 
-			wshandler.Message(&WSMsgContext{
-				MessageBody: body,
-				MessageType: t,
-				WSContext: &WSContext{
-					conn:         h.c,
-					ConnectionID: h.ID,
-					p:            h.p,
-				},
-			})
+// 	// wshandler.Open(&WSContext{
+// 	// 	conn:         h.c,
+// 	// 	ConnectionID: h.ID,
+// 	// 	p:            h.p,
+// 	// })
 
-			// if h.p.onMsg != nil {
-			// 	go h.p.onMsg(&WSMsgContext{
-			// 		MessageBody: body,
-			// 		MessageType: t,
-			// 		WSContext: &WSContext{
-			// 			conn:         h.c,
-			// 			ConnectionID: h.ID,
-			// 			p:            h.p,
-			// 		},
-			// 	})
-			// }
-		}
-	}()
+// 	// if h.p.onConnect != nil {
+// 	// 	h.p.onConnect(&WSContext{
+// 	// 		conn:         h.c,
+// 	// 		ConnectionID: h.ID,
+// 	// 		p:            h.p,
+// 	// 	})
+// 	// }
 
-	wshandler.Open(&WSContext{
-		conn:         h.c,
-		ConnectionID: h.ID,
-		p:            h.p,
-	})
+// 	for {
+// 		select {
+// 		case msg := <-h.msgs:
+// 			if msg == nil {
+// 				return
+// 			}
 
-	// if h.p.onConnect != nil {
-	// 	h.p.onConnect(&WSContext{
-	// 		conn:         h.c,
-	// 		ConnectionID: h.ID,
-	// 		p:            h.p,
-	// 	})
-	// }
-
-	for {
-		select {
-		case msg := <-h.msgs:
-			if msg == nil {
-				return
-			}
-
-			jsoned, _ := json.Marshal(msg)
-			err := h.c.WriteMessage(websocket.TextMessage, jsoned)
-			if err != nil {
-				h.ex <- true
-			}
-		case <-h.ex:
-			h.isConnected = false
-			return
-		}
-	}
-}
+// 			jsoned, _ := json.Marshal(msg)
+// 			err := h.c.WriteMessage(websocket.TextMessage, jsoned)
+// 			if err != nil {
+// 				h.ex <- true
+// 			}
+// 		case <-h.ex:
+// 			h.isConnected = false
+// 			return
+// 		}
+// 	}
+// }

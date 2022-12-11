@@ -1,133 +1,122 @@
 package picoweb
 
-import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"runtime"
-	"sync/atomic"
+// type WsHandler interface {
+// 	Open(c *WSContext)
+// 	Message(c *WSMsgContext)
+// 	Close(c *WSContext)
+// 	Error(error)
+// }
 
-	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
-)
+// var (
+// 	isWsSet bool
+// )
 
-type WsHandler interface {
-	Open(c *WSContext)
-	Message(c *WSMsgContext)
-	Close(c *WSContext)
-	Error(error)
-}
+// type WSConn websocket.Conn
 
-var (
-	isWsSet bool
-)
+// func (p *Pico) OnWSMsg(fn func(c *WSMsgContext)) {
+// 	p.onMsg = fn
+// }
 
-type WSConn websocket.Conn
+// func (p *Pico) OnWSOpen(fn func(c *WSContext)) {
+// 	p.onConnect = fn
+// }
 
-func (p *Pico) OnWSMsg(fn func(c *WSMsgContext)) {
-	p.onMsg = fn
-}
+// func (p *Pico) OnWSClose(fn func(c *WSContext)) {
+// 	p.onClose = fn
+// }
 
-func (p *Pico) OnWSOpen(fn func(c *WSContext)) {
-	p.onConnect = fn
-}
+// func (p *Pico) OnWSError(fn func(err error)) {
+// 	p.onError = fn
+// }
 
-func (p *Pico) OnWSClose(fn func(c *WSContext)) {
-	p.onClose = fn
-}
+// func (p *Pico) CloseWSConn(cid string) {
+// 	h := p.connections.get(cid)
+// 	if h == nil {
+// 		return
+// 	}
+// 	h.forceExit()
+// }
 
-func (p *Pico) OnWSError(fn func(err error)) {
-	p.onError = fn
-}
+// func (p *Pico) mainEndpoint(c *Context) {
+// 	// var memUsage runtime.MemStats
+// 	// if isDev{
+// 	// 	runtime.ReadMemStats(&memUsage)
+// 	// }
 
-func (p *Pico) CloseWSConn(cid string) {
-	h := p.connections.get(cid)
-	if h == nil {
-		return
-	}
-	h.forceExit()
-}
+// 	atomic.AddUint64(&WSConnectionCount, 1)
 
-func (p *Pico) mainEndpoint(c *Context) {
-	// var memUsage runtime.MemStats
-	// if isDev{
-	// 	runtime.ReadMemStats(&memUsage)
-	// }
+// 	// if isDev{
+// 	// 	fmt.Println("Alloc", memUsage.Alloc/1024*1024, "Live", memUsage.Mallocs-memUsage.Frees)
+// 	// }
 
-	atomic.AddUint64(&WSConnectionCount, 1)
+// 	if isDev {
+// 		fmt.Println("Go Routine Count", runtime.NumGoroutine())
+// 	}
 
-	// if isDev{
-	// 	fmt.Println("Alloc", memUsage.Alloc/1024*1024, "Live", memUsage.Mallocs-memUsage.Frees)
-	// }
+// 	con, err := c.Upgrade()
 
-	if isDev {
-		fmt.Println("Go Routine Count", runtime.NumGoroutine())
-	}
+// 	if err != nil {
+// 		c.Status(http.StatusBadRequest)
+// 		wshandler.Error(err)
+// 		// if p.onError != nil {
+// 		// 	p.onError(err)
+// 		// }
+// 		return
+// 	}
 
-	con, err := c.Upgrade()
+// 	if isDev {
+// 		fmt.Println("WS Count", atomic.LoadUint64(&WSConnectionCount))
+// 	}
 
-	if err != nil {
-		c.Status(http.StatusBadRequest)
-		wshandler.Error(err)
-		// if p.onError != nil {
-		// 	p.onError(err)
-		// }
-		return
-	}
+// 	p.wsLoop(con)
 
-	if isDev {
-		fmt.Println("WS Count", atomic.LoadUint64(&WSConnectionCount))
-	}
+// 	atomic.AddUint64(&WSConnectionCount, ^uint64(0))
+// }
 
-	p.wsLoop(con)
+// func (p *Pico) wsLoop(con *websocket.Conn) {
+// 	h := &handler{p: p}
+// 	id := h.init(con)
 
-	atomic.AddUint64(&WSConnectionCount, ^uint64(0))
-}
+// 	if isDev {
+// 		fmt.Println("Initing WS conn", id)
+// 	}
 
-func (p *Pico) wsLoop(con *websocket.Conn) {
-	h := &handler{p: p}
-	id := h.init(con)
+// 	p.connections.add(id, h)
 
-	if isDev {
-		fmt.Println("Initing WS conn", id)
-	}
+// 	defer func() {
+// 		p.connections.remove(id)
 
-	p.connections.add(id, h)
+// 		// if p.onClose != nil {
+// 		// 	p.onClose()
+// 		// }
+// 		wshandler.Close(&WSContext{p: p, conn: con, ConnectionID: id})
 
-	defer func() {
-		p.connections.remove(id)
+// 		h.dispose()
+// 		h.isConnected = false
+// 		if isDev {
+// 			fmt.Println("Connection Closed and Disposed", p.connections.count())
+// 		}
+// 		//h = nil
+// 	}()
 
-		// if p.onClose != nil {
-		// 	p.onClose()
-		// }
-		wshandler.Close(&WSContext{p: p, conn: con, ConnectionID: id})
+// 	if isDev {
+// 		fmt.Println("Connection Made", p.connections.count())
+// 	}
 
-		h.dispose()
-		h.isConnected = false
-		if isDev {
-			fmt.Println("Connection Closed and Disposed", p.connections.count())
-		}
-		//h = nil
-	}()
+// 	h.handle()
+// }
 
-	if isDev {
-		fmt.Println("Connection Made", p.connections.count())
-	}
+// func (p *Pico) SendWS(cid string, data interface{}) error {
+// 	h := p.connections.get(cid)
+// 	if h == nil {
+// 		return errors.New("Connection not found")
+// 	}
 
-	h.handle()
-}
+// 	h.msgs <- data
+// 	return nil
+// }
 
-func (p *Pico) SendWS(cid string, data interface{}) error {
-	h := p.connections.get(cid)
-	if h == nil {
-		return errors.New("Connection not found")
-	}
-
-	h.msgs <- data
-	return nil
-}
-
-func (p *Pico) SendJson(cid string, o interface{}) error {
-	jsoned, _ := json.Marshal(o)
-	return p.SendWS(cid, jsoned)
-}
+// func (p *Pico) SendJson(cid string, o interface{}) error {
+// 	jsoned, _ := json.Marshal(o)
+// 	return p.SendWS(cid, jsoned)
+// }

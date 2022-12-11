@@ -31,29 +31,30 @@ var (
 	redisPassword string
 )
 var (
-	startedOn         time.Time
-	WSConnectionCount uint64
+	startedOn time.Time
+	// WSConnectionCount uint64
 )
-var (
-	wshandler WsHandler
-)
+
+// var (
+// 	wshandler WsHandler
+// )
 
 type Pico struct {
 	Mux    *httprouter.Router
 	server *http.Server
 	c      chan os.Signal
 	//sio          *socketio.Server
-	trackSession bool
-	cookieName   string
-	pre          PicoHandler
-	post         PicoHandler
+	// trackSession bool
+	cookieName string
+	// pre          PicoHandler
+	// post         PicoHandler
 
-	onMsg       func(c *WSMsgContext)
-	onConnect   func(c *WSContext)
-	onError     func(err error)
-	onClose     func(c *WSContext)
-	connections *mmap
-	appName     string
+	// onMsg       func(c *WSMsgContext)
+	// onConnect   func(c *WSContext)
+	// onError     func(err error)
+	// onClose     func(c *WSContext)
+	// connections *mmap
+	appName string
 }
 
 type PicoHandler func(c *Context)
@@ -89,15 +90,15 @@ func (p *Pico) Delete(pattern string, fn PicoHandler) {
 	p.Mux.DELETE(pattern, middle(fn))
 }
 
-func (p *Pico) HandleWS(pattern string, handler WsHandler) {
-	if p.connections != nil {
-		return
-	}
+// func (p *Pico) HandleWS(pattern string, handler WsHandler) {
+// 	if p.connections != nil {
+// 		return
+// 	}
 
-	wshandler = handler
-	p.connections = newmmap()
-	p.Get(pattern, p.mainEndpoint)
-}
+// 	wshandler = handler
+// 	p.connections = newmmap()
+// 	p.Get(pattern, p.mainEndpoint)
+// }
 
 func (p *Pico) StaticDefault(diskPath string) {
 	p.Mux.ServeFiles("/*filepath", http.Dir(diskPath))
@@ -113,6 +114,18 @@ func (p *Pico) Static(urlPath, diskPath string) {
 	}
 
 	p.Mux.ServeFiles(urlPath+"/*filepath", http.Dir(diskPath))
+}
+
+func PreMiddleware(m middlewarehandler) {
+	premiddlewares = append(premiddlewares, m)
+}
+
+func Middleware(m middlewarehandler) {
+	middlewares = append(middlewares, m)
+}
+
+func PostMiddleware(m middlewarehandler) {
+	postmiddlewares = append(postmiddlewares, m)
 }
 
 // func (p *Pico) EnableSocketIoOn(url string) {
