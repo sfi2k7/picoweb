@@ -35,11 +35,13 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 
 		//w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		docontinue := true
-		for _, m := range premiddlewares {
-			docontinue = m(c)
-			if !docontinue {
-				break
+		docontinue := !skipmiddlewares
+		if docontinue {
+			for _, m := range premiddlewares {
+				docontinue = m(c)
+				if !docontinue {
+					break
+				}
 			}
 		}
 
@@ -52,7 +54,7 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 			}
 		}
 
-		if docontinue {
+		if docontinue || skipmiddlewares {
 			p(c)
 		}
 

@@ -1,12 +1,55 @@
 package main
 
-import "github.com/sfi2k7/picoweb"
+import (
+	"fmt"
+
+	"github.com/sfi2k7/picoweb"
+	"github.com/sfi2k7/picoweb/ws"
+)
+
+type wshandlers struct {
+}
+
+func (wsh wshandlers) OnOpen(wsc *ws.WSContext) {
+	fmt.Println("Open")
+
+}
+
+func (wsh wshandlers) OnClose(wsc *ws.WSContext) {
+	fmt.Println("Close")
+}
+
+func (wsh wshandlers) OnData(wsmc *ws.WSMsgContext) {
+	fmt.Println("Message", string(wsmc.MessageBody))
+}
 
 func main() {
 	web := picoweb.New()
-	web.PreMiddleware(func(c *picoweb.Context) {
+	// web.SkipAllMiddlewares()
 
-	})
+	// web.Before(func(c *picoweb.Context) bool {
+	// 	fmt.Println("inside Pre")
+	// 	return true
+	// })
+
+	// web.After(func(c *picoweb.Context) bool {
+	// 	fmt.Println("inside Post")
+	// 	return true
+	// })
+
+	// web.Middle(func(c *picoweb.Context) bool {
+	// 	fmt.Println("inside Middleware")
+	// 	return true
+	// })
+
+	// web.Get("/", func(c *picoweb.Context) {
+	// 	c.String("Hello World")
+	// })
+
+	ws.SetHandlers(wshandlers{})
+	web.Get("/ws", ws.MainEndpoint)
+
+	web.Listen(8899)
 }
 
 // var (

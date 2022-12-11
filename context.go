@@ -24,14 +24,15 @@ import (
 )
 
 type Context struct {
-	w         http.ResponseWriter
-	r         *http.Request
-	params    map[string]string
-	SessionId string
-	s         *mgo.Session
-	red       *redis.Client
-	machineID string
-	Start     time.Time
+	w           http.ResponseWriter
+	r           *http.Request
+	params      map[string]string
+	SessionId   string
+	s           *mgo.Session
+	red         *redis.Client
+	machineID   string
+	Start       time.Time
+	IsWebsocket bool
 }
 
 func (c *Context) SessionHash() string {
@@ -85,6 +86,7 @@ func (c *Context) QueryBool(key string) (bool, error) {
 	if len(v) == 0 {
 		return false, errors.New("key not found in path")
 	}
+
 	b, err := strconv.ParseBool(v)
 	if err != nil {
 		return false, errors.New("Could not parse as Bool")
@@ -184,8 +186,11 @@ func (c *Context) View(filePath string, data interface{}) error {
 }
 
 func (c *Context) Params(name string) string {
-	v, _ := c.params[name]
-	return v
+	v, ok := c.params[name]
+	if ok {
+		return v
+	}
+	return ""
 }
 
 func (c *Context) ResponseHeader() http.Header {
@@ -289,6 +294,7 @@ func (c *Context) Mongo() (*mgo.Session, error) {
 	if c.s != nil {
 		return c.s, nil
 	}
+
 	s, err := getSession()
 	c.s = s
 	return s, err

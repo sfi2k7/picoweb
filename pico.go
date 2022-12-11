@@ -14,6 +14,7 @@ import (
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
+
 	mgo "gopkg.in/mgo.v2"
 
 	"strings"
@@ -21,6 +22,7 @@ import (
 
 //var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
 var baseSession *mgo.Session
+var skipmiddlewares bool
 
 var (
 	RequestCount  uint64
@@ -30,9 +32,9 @@ var (
 	redisURL      string
 	redisPassword string
 )
+
 var (
 	startedOn time.Time
-	// WSConnectionCount uint64
 )
 
 // var (
@@ -45,15 +47,11 @@ type Pico struct {
 	c      chan os.Signal
 	//sio          *socketio.Server
 	// trackSession bool
-	cookieName string
+	cookieName      string
+	skipmiddlewares bool
 	// pre          PicoHandler
 	// post         PicoHandler
 
-	// onMsg       func(c *WSMsgContext)
-	// onConnect   func(c *WSContext)
-	// onError     func(err error)
-	// onClose     func(c *WSContext)
-	// connections *mmap
 	appName string
 }
 
@@ -116,15 +114,19 @@ func (p *Pico) Static(urlPath, diskPath string) {
 	p.Mux.ServeFiles(urlPath+"/*filepath", http.Dir(diskPath))
 }
 
-func PreMiddleware(m middlewarehandler) {
+func (p *Pico) SkipAllMiddlewares() {
+	skipmiddlewares = true
+}
+
+func (p *Pico) Before(m middlewarehandler) {
 	premiddlewares = append(premiddlewares, m)
 }
 
-func Middleware(m middlewarehandler) {
+func (p *Pico) Middle(m middlewarehandler) {
 	middlewares = append(middlewares, m)
 }
 
-func PostMiddleware(m middlewarehandler) {
+func (p *Pico) After(m middlewarehandler) {
 	postmiddlewares = append(postmiddlewares, m)
 }
 
