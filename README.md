@@ -31,17 +31,6 @@ Teeny Tiny Web Wrapper around httprouter
     }
 ```
 
-### SocketIO - Removes in latest Version
-
-```GO
-
-    pico.EnableSocketIoOn("/socket.io/")
-    pico.OnConnection(func(s socketio.Socket) {
-        s.emit("welcome","Welcome to Pico web framewwork")
-    })
-
-```
-
 ### Enable Production Mode
 
 ```GO
