@@ -25,6 +25,15 @@ func (wsh wshandlers) OnData(wsmc *ws.WSMsgContext) {
 
 func main() {
 	web := picoweb.New()
+	web.SetAppName("sample_app_testusermanager")
+
+	web.Before(func(c *picoweb.Context) bool {
+		// isLogin := c.URL().Path == "login"
+		// isRegister := c.URL().Path == "register"
+
+		return true
+	})
+
 	// web.SkipAllMiddlewares()
 
 	// web.Before(func(c *picoweb.Context) bool {
@@ -46,8 +55,8 @@ func main() {
 	// 	c.String("Hello World")
 	// })
 
-	ws.SetHandlers(wshandlers{})
-	web.Get("/ws", ws.MainEndpoint)
+	// ws.SetHandlers(wshandlers{})
+	// web.Get("/ws", ws.MainEndpoint)
 
 	web.Listen(8899)
 }

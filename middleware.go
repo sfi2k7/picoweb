@@ -14,8 +14,9 @@ type middlewarehandler func(c *Context) bool
 var premiddlewares []middlewarehandler
 var postmiddlewares []middlewarehandler
 var middlewares []middlewarehandler
+var must middlewarehandler
 
-func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func middle(p PicoHandler, appname string, useAppManager bool) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		if r := recover(); r != nil {
@@ -24,10 +25,20 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 			return
 		}
 
-		atomic.AddUint64(&RequestCount, 1)
+		var sessionId string
+		if useAppManager {
+			if len(appname) > 0 {
+				c, err := r.Cookie(appname)
+				if err == nil {
+					sessionId = c.Value
+				}
+			}
+		}
+
+		atomic.AddUint64(&requestCount, 1)
 
 		start := time.Now()
-		c := &Context{w: w, r: r, params: make(map[string]string), Start: time.Now()}
+		c := &Context{SessionId: sessionId, AppName: appname, UserManager: &usermanager{appname: appname}, w: w, r: r, params: make(map[string]string), Start: time.Now()}
 
 		for _, par := range ps {
 			c.params[par.Key] = par.Value
@@ -36,6 +47,7 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 		//w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		docontinue := !skipmiddlewares
+
 		if docontinue {
 			for _, m := range premiddlewares {
 				docontinue = m(c)
@@ -54,7 +66,7 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 			}
 		}
 
-		if docontinue || skipmiddlewares {
+		if skipmiddlewares || docontinue {
 			p(c)
 		}
 
@@ -67,6 +79,10 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 			}
 		}
 
+		if must != nil {
+			must(c)
+		}
+
 		if c.s != nil {
 			c.s.Close()
 		}
@@ -76,7 +92,7 @@ func middle(p PicoHandler) func(w http.ResponseWriter, r *http.Request, ps httpr
 		}
 
 		if isDev {
-			fmt.Println(time.Since(start), r.URL, atomic.LoadUint64(&RequestCount))
+			fmt.Println(time.Since(start), r.URL, atomic.LoadUint64(&requestCount))
 		}
 	}
 }
@@ -85,7 +101,7 @@ func middlehttp(fn http.Handler) func(w http.ResponseWriter, r *http.Request, ps
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		//start := time.Now()
 		fn.ServeHTTP(w, r)
-		//fmt.Println(time.Since(start), r.URL, RequestCount)
+		//fmt.Println(time.Since(start), r.URL, requestCount)
 	}
 }
 

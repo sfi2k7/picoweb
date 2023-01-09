@@ -25,7 +25,7 @@ var baseSession *mgo.Session
 var skipmiddlewares bool
 
 var (
-	RequestCount  uint64
+	requestCount  uint64
 	isDev         bool
 	flash         Flash
 	mongoURL      string
@@ -47,12 +47,10 @@ type Pico struct {
 	c      chan os.Signal
 	//sio          *socketio.Server
 	// trackSession bool
-	cookieName      string
-	skipmiddlewares bool
 	// pre          PicoHandler
 	// post         PicoHandler
-
-	appName string
+	useAppManager bool
+	appName       string
 }
 
 type PicoHandler func(c *Context)
@@ -69,23 +67,23 @@ func (p *Pico) RedisURL(rurl string, redispassword ...string) {
 }
 
 func (p *Pico) Get(pattern string, fn PicoHandler) {
-	p.Mux.GET(pattern, middle(fn))
+	p.Mux.GET(pattern, middle(fn, p.appName, p.useAppManager))
 }
 
 func (p *Pico) Post(pattern string, fn PicoHandler) {
-	p.Mux.POST(pattern, middle(fn))
+	p.Mux.POST(pattern, middle(fn, p.appName, p.useAppManager))
 }
 
 func (p *Pico) Options(pattern string, fn PicoHandler) {
-	p.Mux.OPTIONS(pattern, middle(fn))
+	p.Mux.OPTIONS(pattern, middle(fn, p.appName, p.useAppManager))
 }
 
 func (p *Pico) Put(pattern string, fn PicoHandler) {
-	p.Mux.PUT(pattern, middle(fn))
+	p.Mux.PUT(pattern, middle(fn, p.appName, p.useAppManager))
 }
 
 func (p *Pico) Delete(pattern string, fn PicoHandler) {
-	p.Mux.DELETE(pattern, middle(fn))
+	p.Mux.DELETE(pattern, middle(fn, p.appName, p.useAppManager))
 }
 
 // func (p *Pico) HandleWS(pattern string, handler WsHandler) {
@@ -122,8 +120,12 @@ func (p *Pico) Before(m middlewarehandler) {
 	premiddlewares = append(premiddlewares, m)
 }
 
-func (p *Pico) Middle(m middlewarehandler) {
+func (p *Pico) Use(m middlewarehandler) {
 	middlewares = append(middlewares, m)
+}
+
+func (p *Pico) Must(m middlewarehandler) {
+	must = m
 }
 
 func (p *Pico) After(m middlewarehandler) {
@@ -155,6 +157,11 @@ func (p *Pico) GetFlash(sessionId string) interface{} {
 
 func (p *Pico) SetFlash(sessionId string, value interface{}) {
 	flash.Set(sessionId, value)
+}
+
+func (p *Pico) UserUserManager(url, password string) {
+	p.useAppManager = true
+	useUserManager(url, password)
 }
 
 // func (p *Pico) TrackSessionUsingCookie(cookieName string) {
@@ -241,7 +248,7 @@ func (p *Pico) CustomNotFound() {
 
 func (p *Pico) StopOnIntWithFunc(fn func()) {
 	p.c = make(chan os.Signal, 1)
-	signal.Notify(p.c, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
+	signal.Notify(p.c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	go func() {
 		<-p.c

@@ -33,6 +33,8 @@ type Context struct {
 	machineID   string
 	Start       time.Time
 	IsWebsocket bool
+	UserManager *usermanager
+	AppName     string
 }
 
 func (c *Context) SessionHash() string {
