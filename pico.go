@@ -159,7 +159,7 @@ func (p *Pico) SetFlash(sessionId string, value interface{}) {
 	flash.Set(sessionId, value)
 }
 
-func (p *Pico) UserUserManager(url, password string) {
+func (p *Pico) UseUserManager(url, password string) {
 	p.useAppManager = true
 	useUserManager(url, password)
 }

@@ -35,6 +35,7 @@ type Context struct {
 	IsWebsocket bool
 	UserManager *usermanager
 	AppName     string
+	User        interface{}
 }
 
 func (c *Context) SessionHash() string {
