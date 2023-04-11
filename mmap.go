@@ -61,6 +61,31 @@ func (m *genericmmap) closeAll() {
 	}
 }
 
+func (m *genericmmap) send(id string, data WsData) {
+	m._lock.Lock()
+	defer m._lock.Unlock()
+
+	h, ok := m.m[id]
+	if !ok || !h.isOpen {
+		return
+	}
+
+	h.out.In(data)
+}
+
+func (m *genericmmap) broadcast(data WsData) {
+	m._lock.Lock()
+	defer m._lock.Unlock()
+
+	for _, h := range m.m {
+		if h == nil || !h.isOpen {
+			continue
+		}
+
+		h.out.In(data)
+	}
+}
+
 func newgenericmmap() *genericmmap {
 	return &genericmmap{
 		m:     make(map[string]*genericconnectionhandler),

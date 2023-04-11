@@ -57,6 +57,22 @@ func (p *Pico) MongoURL(murl string) {
 	mongoURL = murl
 }
 
+func (p *Pico) SendWS(id string, data WsData) {
+	if server == nil {
+		return
+	}
+
+	connections.send(id, data)
+}
+
+func (p *Pico) BroadcastWS(data WsData) {
+	if server == nil {
+		return
+	}
+
+	connections.broadcast(data)
+}
+
 func (p *Pico) RedisURL(rurl string, redispassword ...string) {
 	redisURL = rurl
 	if len(redispassword) > 0 {
