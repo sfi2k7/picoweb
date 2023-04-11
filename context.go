@@ -48,6 +48,7 @@ func (c *Context) SessionHash() string {
 
 func (c *Context) Body() ([]byte, error) {
 	bts, err := ioutil.ReadAll(c.r.Body)
+
 	return bts, err
 }
 
@@ -62,7 +63,7 @@ func (c *Context) Query(key string) string {
 
 func (c *Context) QueryCaseIn(key string) string {
 	for k, v := range c.r.URL.Query() {
-		if strings.ToLower(k) == strings.ToLower(key) {
+		if strings.EqualFold(k, key) {
 			if len(v) > 0 {
 				return v[0]
 			}

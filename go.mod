@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/garyburd/redigo v1.6.3 // indirect
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/onsi/gomega v1.20.0 // indirect

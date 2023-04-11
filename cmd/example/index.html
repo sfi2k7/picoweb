@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    This is a html page {{ .Name }}
+    <script>
+        onload = async () => {
+            let ws = new WebSocket("ws://localhost:57432/ws");
+
+            ws.onmessage = (e) => {
+                console.log(e.data);
+            }
+            ws.onopen = () => {
+                console.log("conneciton open")
+                ws.send(JSON.stringify({ "cmd": "hello" }));
+            }
+            ws.onclose = () => {
+                console.log("Connection closed");
+            }
+
+            ws.onerror = (e) => {
+                console.log(e);
+            }
+        }
+    </script>
+</body>
+
+</html>

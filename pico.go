@@ -14,6 +14,7 @@ import (
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 
 	mgo "gopkg.in/mgo.v2"
 
@@ -23,6 +24,7 @@ import (
 //var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
 var baseSession *mgo.Session
 var skipmiddlewares bool
+var server *GenericWsGoServer
 
 var (
 	requestCount  uint64
@@ -36,10 +38,6 @@ var (
 var (
 	startedOn time.Time
 )
-
-// var (
-// 	wshandler WsHandler
-// )
 
 type Pico struct {
 	Mux    *httprouter.Router
@@ -67,34 +65,34 @@ func (p *Pico) RedisURL(rurl string, redispassword ...string) {
 }
 
 func (p *Pico) Get(pattern string, fn PicoHandler) {
-	p.Mux.GET(pattern, middle(fn, p.appName, p.useAppManager))
+	p.Mux.GET(pattern, middle(fn, p.appName, p.useAppManager, false))
+}
+
+func (p *Pico) WS(pattern string, mh WsHandler) {
+	if server != nil {
+		panic(errors.New("only one websocket server is allowed per application"))
+	}
+
+	server = &GenericWsGoServer{MessageHandler: mh}
+	connections = newgenericmmap()
+	p.Mux.GET(pattern, middle(server.Handle, p.appName, p.useAppManager, true))
 }
 
 func (p *Pico) Post(pattern string, fn PicoHandler) {
-	p.Mux.POST(pattern, middle(fn, p.appName, p.useAppManager))
+	p.Mux.POST(pattern, middle(fn, p.appName, p.useAppManager, false))
 }
 
 func (p *Pico) Options(pattern string, fn PicoHandler) {
-	p.Mux.OPTIONS(pattern, middle(fn, p.appName, p.useAppManager))
+	p.Mux.OPTIONS(pattern, middle(fn, p.appName, p.useAppManager, false))
 }
 
 func (p *Pico) Put(pattern string, fn PicoHandler) {
-	p.Mux.PUT(pattern, middle(fn, p.appName, p.useAppManager))
+	p.Mux.PUT(pattern, middle(fn, p.appName, p.useAppManager, false))
 }
 
 func (p *Pico) Delete(pattern string, fn PicoHandler) {
-	p.Mux.DELETE(pattern, middle(fn, p.appName, p.useAppManager))
+	p.Mux.DELETE(pattern, middle(fn, p.appName, p.useAppManager, false))
 }
-
-// func (p *Pico) HandleWS(pattern string, handler WsHandler) {
-// 	if p.connections != nil {
-// 		return
-// 	}
-
-// 	wshandler = handler
-// 	p.connections = newmmap()
-// 	p.Get(pattern, p.mainEndpoint)
-// }
 
 func (p *Pico) StaticDefault(diskPath string) {
 	p.Mux.ServeFiles("/*filepath", http.Dir(diskPath))
@@ -131,25 +129,6 @@ func (p *Pico) Must(m middlewarehandler) {
 func (p *Pico) After(m middlewarehandler) {
 	postmiddlewares = append(postmiddlewares, m)
 }
-
-// func (p *Pico) EnableSocketIoOn(url string) {
-// 	var err error
-// 	p.sio, err = socketio.NewServer(nil)
-// 	p.Mux.GET(url, middlehttp(p.sio))
-// 	fmt.Println(err)
-// }
-
-// func (p *Pico) OnConnection(fn func(s Socket)) {
-// 	p.sio.On("connection", socket_middle(fn))
-// }
-
-// func (p *Pico) OnError(fn func(s Socket, e error)) {
-// 	p.sio.On("error", socket_middle_error(fn))
-// }
-
-// func (p *Pico) On(event string, fn func(msg string)) {
-// 	p.sio.On(event, fn)
-// }
 
 func (p *Pico) GetFlash(sessionId string) interface{} {
 	return flash.Get(sessionId)

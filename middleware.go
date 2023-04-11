@@ -16,7 +16,7 @@ var postmiddlewares []middlewarehandler
 var middlewares []middlewarehandler
 var must middlewarehandler
 
-func middle(p PicoHandler, appname string, useAppManager bool) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		if r := recover(); r != nil {
@@ -26,7 +26,7 @@ func middle(p PicoHandler, appname string, useAppManager bool) func(w http.Respo
 		}
 
 		var sessionId string
-		if useAppManager {
+		if useAppManager && !iswebsocket {
 			if len(appname) > 0 {
 				c, err := r.Cookie(appname)
 				if err == nil {
@@ -46,7 +46,7 @@ func middle(p PicoHandler, appname string, useAppManager bool) func(w http.Respo
 
 		//w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		docontinue := !skipmiddlewares
+		docontinue := !skipmiddlewares || !iswebsocket
 
 		if docontinue {
 			for _, m := range premiddlewares {
@@ -66,11 +66,11 @@ func middle(p PicoHandler, appname string, useAppManager bool) func(w http.Respo
 			}
 		}
 
-		if skipmiddlewares || docontinue {
+		if iswebsocket || skipmiddlewares || docontinue {
 			p(c)
 		}
 
-		if docontinue {
+		if docontinue && !iswebsocket {
 			for _, m := range postmiddlewares {
 				docontinue = m(c)
 				if !docontinue {
@@ -79,7 +79,7 @@ func middle(p PicoHandler, appname string, useAppManager bool) func(w http.Respo
 			}
 		}
 
-		if must != nil {
+		if must != nil && !iswebsocket {
 			must(c)
 		}
 
