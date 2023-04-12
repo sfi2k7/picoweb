@@ -12,8 +12,14 @@ var (
 
 func handler(args *picoweb.WSArgs) picoweb.WsData {
 	fmt.Println("args", args)
-	if args.Command == "hello" {
+
+	if args.Command == "ws_open" {
 		return picoweb.WsData{"message": "Hello from server"}
+	}
+
+	if args.Command == "hello" {
+		// return picoweb.WsForceClose // picoweb.WsData{"close": true}
+		return picoweb.WsData{"message": "Hello back"}
 	}
 
 	return nil
@@ -41,28 +47,29 @@ func main() {
 
 	// go background(ctx)
 	p.Use(func(c *picoweb.Context) bool {
+
 		// c.String("Skipping middle ware")
-		fmt.Println("use", false)
+		// fmt.Println("use", false)
 		return true
 	})
 
 	p.Before(func(c *picoweb.Context) bool {
 		// c.String("Skipping after before")
-		fmt.Println("before", true)
+		// fmt.Println("before", true)
 		return true
 	})
 
 	p.After(func(c *picoweb.Context) bool {
-		c.String("Skipping After after")
-		fmt.Println("after", true)
+		// c.String("Skipping After after")
+		// fmt.Println("after", true)
 		return true
 	})
 
 	p.StopOnInt()
 	p.CustomNotFound()
 	p.SetAppName("picowebtest")
-
-	p.WS("/ws", handler)
+	p.Production()
+	p.WS("/ws/:sometoken", handler)
 	p.Get("/", func(c *picoweb.Context) {
 		c.View("./index.html", nil)
 	})

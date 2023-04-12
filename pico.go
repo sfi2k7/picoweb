@@ -258,6 +258,11 @@ func (p *Pico) StopOnIntWithFunc(fn func()) {
 	go func() {
 		<-p.c
 
+		if server != nil {
+			server.isShuttingDown = true
+			connections.closeAll()
+		}
+
 		if isDev {
 			fmt.Println("Shutting Down!")
 		}

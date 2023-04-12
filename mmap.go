@@ -27,26 +27,20 @@ func (m *genericmmap) remove(id string) error {
 }
 
 func (m *genericmmap) count() int {
-	m._lock.Lock()
-	defer m._lock.Unlock()
-
 	return len(m.m)
 }
 
-func (m *genericmmap) get(id string) *genericconnectionhandler {
-	m._lock.Lock()
-	defer m._lock.Unlock()
-
-	h, ok := m.m[id]
-	if !ok {
-		return nil
-	}
-	return h
-}
+// func (m *genericmmap) get(id string) *genericconnectionhandler {
+// 	h, ok := m.m[id]
+// 	if !ok {
+// 		return nil
+// 	}
+// 	return h
+// }
 
 func (m *genericmmap) closeAll() {
-	m._lock.Lock()
-	defer m._lock.Unlock()
+	// m._lock.Lock()
+	// defer m._lock.Unlock()
 
 	if m.count() == 0 {
 		return
@@ -56,8 +50,8 @@ func (m *genericmmap) closeAll() {
 		if h == nil || !h.isOpen {
 			continue
 		}
-
-		h.Terminate()
+		h.isOpen = false
+		// h.Terminate()
 	}
 }
 

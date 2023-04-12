@@ -33,13 +33,22 @@ func (wh *genericconnectionhandler) Dispose() {
 	wh.ex.Close()
 }
 
-func (wh *genericconnectionhandler) handle(ctx context.Context) {
+func (wh *genericconnectionhandler) handle(ctx context.Context, opendata WsData) {
 	wh.isOpen = true
 
 	defer func() {
 		wh.ex.Close()
 		wh.isOpen = false
 	}()
+
+	openResponse := wh.clienthandler(&WSArgs{ID: wh.ID, Channel: "ws", Command: "ws_open", Body: opendata})
+	if openResponse != nil {
+		if openResponse.Bool("close") {
+			wh.clienthandler(&WSArgs{ID: wh.ID, Channel: "ws", Command: "ws_close", Body: WsData{"count": connections.count()}})
+			return
+		}
+		wh.out.In(openResponse)
+	}
 
 	go func() {
 		for wh.isOpen {
@@ -67,6 +76,11 @@ func (wh *genericconnectionhandler) handle(ctx context.Context) {
 			})
 
 			if response != nil {
+				if response.Bool("close") {
+					wh.ex.In(struct{}{})
+					wh.isOpen = false
+					return
+				}
 				wh.out.In(response)
 			}
 		}
@@ -81,6 +95,9 @@ out:
 				fmt.Println("Outgoing write", err)
 				break out
 			}
+		case <-ctx.Done():
+			// fmt.Println("Exiting CTX")
+			break out
 		case <-wh.ex.Out():
 			// fmt.Println("Exiting EX")
 			break out
@@ -96,7 +113,7 @@ func NewGenericHandler(c *websocket.Conn) *genericconnectionhandler {
 		ID:     ID(),
 		c:      c,
 		isOpen: true,
-		ex:     Channel(2), //  make(chan struct{}, 2),
+		ex:     Channel(5), //  make(chan struct{}, 2),
 		out:    WsDataGoChannel(10),
 	}
 }

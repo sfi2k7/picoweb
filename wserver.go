@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 var (
 	connections *genericmmap
 )
+
+var WsForceClose = WsData{"close": true}
 
 type WsHandler func(args *WSArgs) WsData
 
@@ -56,7 +59,7 @@ func (wsg *GenericWsGoServer) Handle(c *Context) {
 		if len(q) == 0 {
 			continue
 		}
-		openData[k] = q[0]
+		openData[strings.ToLower(k)] = q[0]
 	}
 
 	for k, v := range c.r.Header {
@@ -64,7 +67,11 @@ func (wsg *GenericWsGoServer) Handle(c *Context) {
 			continue
 		}
 
-		openData[k] = v[0]
+		openData[strings.ToLower(k)] = v[0]
+	}
+
+	for k, v := range c.params {
+		openData[strings.ToLower(k)] = v
 	}
 
 	handler := NewGenericHandler(con)
@@ -73,16 +80,13 @@ func (wsg *GenericWsGoServer) Handle(c *Context) {
 
 	connections.add(handler.ID, handler)
 
-	wsg.MessageHandler(&WSArgs{ID: handler.ID, Channel: "ws", Command: "ws_open", Body: openData})
-	wsg.MessageHandler(&WSArgs{ID: handler.ID, Channel: "ws", Command: "ws_count", Body: WsData{"count": connections.count()}})
+	openData.Set("count", connections.count())
 
-	handler.handle(context.Background())
+	handler.handle(context.Background(), openData)
 
 	connections.remove(handler.ID)
 
-	wsg.MessageHandler(&WSArgs{ID: handler.ID, Channel: "ws", Command: "ws_close"})
-	wsg.MessageHandler(&WSArgs{ID: handler.ID, Channel: "ws", Command: "ws_remove"})
-	wsg.MessageHandler(&WSArgs{ID: handler.ID, Channel: "ws", Command: "ws_count", Body: WsData{"count": connections.count()}})
+	wsg.MessageHandler(&WSArgs{ID: handler.ID, Channel: "ws", Command: "ws_close", Body: WsData{"count": connections.count()}})
 
 	handler.clienthandler = nil
 }
