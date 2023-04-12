@@ -197,6 +197,12 @@ func (p *Pico) ListenTLS(port, cert, key string) {
 }
 
 func (p *Pico) Listen(port int) error {
+	defer func() {
+		if connections != nil {
+			connections.closeAll()
+		}
+	}()
+
 	envPort := os.Getenv("PORT")
 	if len(envPort) > 0 {
 		pi, err := strconv.Atoi(envPort)
