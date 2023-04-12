@@ -89,6 +89,10 @@ func (p *Pico) WS(pattern string, mh WsHandler) {
 		panic(errors.New("only one websocket server is allowed per application"))
 	}
 
+	if mh == nil {
+		panic(errors.New("websocket handler cannot be nil"))
+	}
+
 	server = &GenericWsGoServer{MessageHandler: mh}
 	connections = newgenericmmap()
 	p.Mux.GET(pattern, middle(server.Handle, p.appName, p.useAppManager, true))

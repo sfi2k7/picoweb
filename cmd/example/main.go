@@ -40,6 +40,23 @@ func main() {
 	// defer cancel()
 
 	// go background(ctx)
+	p.Use(func(c *picoweb.Context) bool {
+		// c.String("Skipping middle ware")
+		fmt.Println("use", false)
+		return true
+	})
+
+	p.Before(func(c *picoweb.Context) bool {
+		// c.String("Skipping after before")
+		fmt.Println("before", true)
+		return true
+	})
+
+	p.After(func(c *picoweb.Context) bool {
+		c.String("Skipping After after")
+		fmt.Println("after", true)
+		return true
+	})
 
 	p.StopOnInt()
 	p.CustomNotFound()

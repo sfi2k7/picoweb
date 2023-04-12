@@ -50,13 +50,30 @@ func (wsg *GenericWsGoServer) Handle(c *Context) {
 		return
 	}
 
+	var openData = WsData{}
+
+	for k, q := range c.URL().Query() {
+		if len(q) == 0 {
+			continue
+		}
+		openData[k] = q[0]
+	}
+
+	for k, v := range c.r.Header {
+		if len(v) == 0 {
+			continue
+		}
+
+		openData[k] = v[0]
+	}
+
 	handler := NewGenericHandler(con)
 	handler.clienthandler = wsg.MessageHandler
 	defer handler.Dispose()
 
 	connections.add(handler.ID, handler)
 
-	wsg.MessageHandler(&WSArgs{ID: handler.ID, Channel: "ws", Command: "ws_open"})
+	wsg.MessageHandler(&WSArgs{ID: handler.ID, Channel: "ws", Command: "ws_open", Body: openData})
 	wsg.MessageHandler(&WSArgs{ID: handler.ID, Channel: "ws", Command: "ws_count", Body: WsData{"count": connections.count()}})
 
 	handler.handle(context.Background())
