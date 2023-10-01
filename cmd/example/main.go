@@ -69,9 +69,12 @@ func main() {
 	p.CustomNotFound()
 	p.SetAppName("picowebtest")
 	p.Production()
-	p.WS("/ws/:sometoken", handler)
+
+	p.Ws("/ws/:sometoken", handler)
+
 	p.Get("/", func(c *picoweb.Context) {
 		c.View("./index.html", nil)
 	})
+
 	fmt.Println(p.Listen(57432))
 }

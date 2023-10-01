@@ -40,7 +40,7 @@ type usermanager struct {
 
 func (um *usermanager) IsAnonymouse(session string) bool {
 	if red == nil {
-		return false
+		return true
 	}
 
 	if len(session) == 0 {

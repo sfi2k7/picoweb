@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-//var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
+// var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
 var baseSession *mgo.Session
 var skipmiddlewares bool
 var server *GenericWsGoServer
@@ -84,7 +84,7 @@ func (p *Pico) Get(pattern string, fn PicoHandler) {
 	p.Mux.GET(pattern, middle(fn, p.appName, p.useAppManager, false))
 }
 
-func (p *Pico) WS(pattern string, mh WsHandler) {
+func (p *Pico) Ws(pattern string, mh WsHandler) {
 	if server != nil {
 		panic(errors.New("only one websocket server is allowed per application"))
 	}
@@ -143,7 +143,7 @@ func (p *Pico) Use(m middlewarehandler) {
 }
 
 func (p *Pico) Must(m middlewarehandler) {
-	must = m
+	must = append(must, m)
 }
 
 func (p *Pico) After(m middlewarehandler) {

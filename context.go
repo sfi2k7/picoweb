@@ -36,6 +36,7 @@ type Context struct {
 	UserManager *usermanager
 	AppName     string
 	User        interface{}
+	State       interface{}
 }
 
 func (c *Context) SessionHash() string {

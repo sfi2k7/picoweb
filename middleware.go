@@ -14,7 +14,7 @@ type middlewarehandler func(c *Context) bool
 var premiddlewares []middlewarehandler
 var postmiddlewares []middlewarehandler
 var middlewares []middlewarehandler
-var must middlewarehandler
+var must []middlewarehandler
 
 func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
@@ -47,10 +47,12 @@ func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool)
 		//w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		runNext := !skipmiddlewares
-		for _, m := range premiddlewares {
-			runNext = m(c)
-			if !runNext {
-				break
+		if runNext {
+			for _, m := range premiddlewares {
+				runNext = m(c)
+				if !runNext {
+					break
+				}
 			}
 		}
 
@@ -63,11 +65,11 @@ func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool)
 			}
 		}
 
-		if skipmiddlewares || runNext {
+		if runNext || skipmiddlewares {
 			p(c)
 		}
 
-		if runNext {
+		if runNext && !skipmiddlewares {
 			for _, m := range postmiddlewares {
 				runNext = m(c)
 				if !runNext {
@@ -76,9 +78,18 @@ func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool)
 			}
 		}
 
-		if must != nil {
-			must(c)
+		if must != nil && !skipmiddlewares {
+			for _, m := range must {
+				runNext = m(c)
+				if !runNext {
+					break
+				}
+			}
 		}
+
+		c.State = nil
+		c.User = nil
+		c.SessionId = ""
 
 		if c.s != nil {
 			c.s.Close()
