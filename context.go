@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -48,13 +48,22 @@ func (c *Context) SessionHash() string {
 }
 
 func (c *Context) Body() ([]byte, error) {
-	bts, err := ioutil.ReadAll(c.r.Body)
+	bts, err := io.ReadAll(c.r.Body)
 
 	return bts, err
 }
 
+func (c *Context) ParseBody(target interface{}) error {
+	bts, err := io.ReadAll(c.r.Body)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(bts, target)
+}
+
 func (c *Context) Bytes() []byte {
-	bts, _ := ioutil.ReadAll(c.r.Body)
+	bts, _ := io.ReadAll(c.r.Body)
 	return bts
 }
 
