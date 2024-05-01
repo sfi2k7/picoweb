@@ -78,14 +78,14 @@ func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool)
 			}
 		}
 
-		if must != nil && !skipmiddlewares {
-			for _, m := range must {
-				runNext = m(c)
-				if !runNext {
-					break
-				}
+		// if len(must) > 0 && !skipmiddlewares {
+		for _, m := range must {
+			runNext = m(c)
+			if !runNext {
+				break
 			}
 		}
+		// }
 
 		c.State = nil
 		c.User = nil
@@ -105,13 +105,13 @@ func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool)
 	}
 }
 
-func middlehttp(fn http.Handler) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		//start := time.Now()
-		fn.ServeHTTP(w, r)
-		//fmt.Println(time.Since(start), r.URL, requestCount)
-	}
-}
+// func middlehttp(fn http.Handler) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// 		//start := time.Now()
+// 		fn.ServeHTTP(w, r)
+// 		//fmt.Println(time.Since(start), r.URL, requestCount)
+// 	}
+// }
 
 // func socket_middle(fn func(c Socket)) func(socketio.Socket) {
 // 	return func(socket socketio.Socket) {
