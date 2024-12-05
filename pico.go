@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -229,6 +230,7 @@ func (p *Pico) Listen(port int) error {
 		fmt.Println("Listing on " + strconv.Itoa(port))
 	}
 
+	rqc = reqcount{s: sync.Mutex{}}
 	return p.server.ListenAndServe()
 }
 

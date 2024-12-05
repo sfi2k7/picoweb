@@ -3,6 +3,7 @@ package picoweb
 import (
 	"fmt"
 	"net/http"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -16,6 +17,33 @@ var postmiddlewares []middlewarehandler
 var middlewares []middlewarehandler
 var must []middlewarehandler
 
+type reqcount struct {
+	r map[string]uint64
+	s sync.Mutex
+}
+
+func (r *reqcount) Add(k string) {
+	r.s.Lock()
+	defer r.s.Unlock()
+
+	if r.r == nil {
+		r.r = make(map[string]uint64)
+	}
+	r.r[k]++
+}
+
+func (r *reqcount) Get(k string) uint64 {
+	r.s.Lock()
+	defer r.s.Unlock()
+
+	if r.r == nil {
+		return 0
+	}
+	return r.r[k]
+}
+
+var rqc reqcount
+
 func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -24,6 +52,8 @@ func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
+		rqc.Add(r.URL.Path)
 
 		var sessionId string
 		if useAppManager {
@@ -100,7 +130,8 @@ func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool)
 		}
 
 		if isDev {
-			fmt.Println("ts:", time.Now().Format(time.RFC3339), "url:", r.URL, "req#:", atomic.LoadUint64(&requestCount), "took:", time.Since(start))
+			// fmt.Println("ts:", time.Now().Format(time.RFC3339), time.Since(start), "req#:", rqc.Get(r.URL.Path), "/", atomic.LoadUint64(&requestCount), "url:", r.URL)
+			fmt.Printf("ts: %s, time:%s, req:%d/%d, url:%s\n", time.Now().Format(time.RFC1123), time.Since(start), rqc.Get(r.URL.Path), atomic.LoadUint64(&requestCount), r.URL)
 		}
 	}
 }
