@@ -100,7 +100,7 @@ func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool)
 		}
 
 		if isDev {
-			fmt.Println(time.Since(start), r.URL, atomic.LoadUint64(&requestCount))
+			fmt.Println("ts:", time.Now().Format(time.RFC3339), "url:", r.URL, "req#:", atomic.LoadUint64(&requestCount), "took:", time.Since(start))
 		}
 	}
 }
