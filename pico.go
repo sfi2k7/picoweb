@@ -167,9 +167,10 @@ func (p *Pico) SetFlash(sessionId string, value interface{}) {
 	flash.Set(sessionId, value)
 }
 
+// obsolete
 func (p *Pico) UseUserManager(url, password string) {
-	p.useAppManager = true
-	useUserManager(url, password)
+	// p.useAppManager = true
+	// useUserManager(url, password)
 }
 
 // func (p *Pico) TrackSessionUsingCookie(cookieName string) {

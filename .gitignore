@@ -27,3 +27,6 @@ _testmain.go
 t.json
 *.sh
 deploy_blueserver.sh
+/cmd/*
+/middlewares/*
+/ws/*
