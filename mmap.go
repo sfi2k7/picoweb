@@ -2,14 +2,14 @@ package picoweb
 
 import "sync"
 
-//Hub Code
+// Hub Code
 type genericmmap struct {
 	m     map[string]*genericconnectionhandler
 	_lock *sync.Mutex
 }
 
-//add adds entry.
-//Add a new entry to the map
+// add adds entry.
+// Add a new entry to the map
 func (m *genericmmap) add(id string, h *genericconnectionhandler) {
 	m._lock.Lock()
 	defer m._lock.Unlock()
@@ -67,11 +67,17 @@ func (m *genericmmap) send(id string, data WsData) {
 	h.out.In(data)
 }
 
-func (m *genericmmap) broadcast(data WsData) {
+func (m *genericmmap) broadcast(data WsData, exclude ...string) {
 	m._lock.Lock()
 	defer m._lock.Unlock()
 
 	for _, h := range m.m {
+		if len(exclude) > 0 {
+			if h.ID == exclude[0] {
+				continue
+			}
+		}
+
 		if h == nil || !h.isOpen {
 			continue
 		}

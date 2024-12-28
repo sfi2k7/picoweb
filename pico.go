@@ -25,15 +25,17 @@ import (
 // var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}
 var baseSession *mgo.Session
 var skipmiddlewares bool
+var skipmusts bool
+
 var server *GenericWsGoServer
 
 var (
-	requestCount  uint64
-	isDev         bool
-	flash         Flash
-	mongoURL      string
-	redisURL      string
-	redisPassword string
+	requestCount uint64
+	isDev        bool
+	flash        Flash
+	// mongoURL      string
+	// redisURL      string
+	// redisPassword string
 )
 
 var (
@@ -54,9 +56,11 @@ type Pico struct {
 
 type PicoHandler func(c *Context)
 
-func (p *Pico) MongoURL(murl string) {
-	mongoURL = murl
-}
+// type PicoHandler func(c *Context) interface{}
+
+// func (p *Pico) MongoURL(murl string) {
+// 	mongoURL = murl
+// }
 
 func (p *Pico) SendWS(id string, data WsData) {
 	if server == nil {
@@ -66,23 +70,23 @@ func (p *Pico) SendWS(id string, data WsData) {
 	connections.send(id, data)
 }
 
-func (p *Pico) BroadcastWS(data WsData) {
+func (p *Pico) BroadcastWS(data WsData, exclude ...string) {
 	if server == nil {
 		return
 	}
 
-	connections.broadcast(data)
+	connections.broadcast(data, exclude...)
 }
 
-func (p *Pico) RedisURL(rurl string, redispassword ...string) {
-	redisURL = rurl
-	if len(redispassword) > 0 {
-		redisPassword = redispassword[0]
-	}
-}
+// func (p *Pico) RedisURL(rurl string, redispassword ...string) {
+// 	redisURL = rurl
+// 	if len(redispassword) > 0 {
+// 		redisPassword = redispassword[0]
+// 	}
+// }
 
 func (p *Pico) Get(pattern string, fn PicoHandler) {
-	p.Mux.GET(pattern, middle(fn, p.appName, p.useAppManager, false))
+	p.Mux.GET(pattern, middle(fn, p.appName))
 }
 
 func (p *Pico) Ws(pattern string, mh WsHandler) {
@@ -96,23 +100,27 @@ func (p *Pico) Ws(pattern string, mh WsHandler) {
 
 	server = &GenericWsGoServer{MessageHandler: mh}
 	connections = newgenericmmap()
-	p.Mux.GET(pattern, middle(server.Handle, p.appName, p.useAppManager, true))
+	p.Mux.GET(pattern, middle(server.Handle, p.appName))
 }
 
 func (p *Pico) Post(pattern string, fn PicoHandler) {
-	p.Mux.POST(pattern, middle(fn, p.appName, p.useAppManager, false))
+	p.Mux.POST(pattern, middle(fn, p.appName))
 }
 
 func (p *Pico) Options(pattern string, fn PicoHandler) {
-	p.Mux.OPTIONS(pattern, middle(fn, p.appName, p.useAppManager, false))
+	p.Mux.OPTIONS(pattern, middle(fn, p.appName))
 }
 
 func (p *Pico) Put(pattern string, fn PicoHandler) {
-	p.Mux.PUT(pattern, middle(fn, p.appName, p.useAppManager, false))
+	p.Mux.PUT(pattern, middle(fn, p.appName))
+}
+
+func (p *Pico) Patch(pattern string, fn PicoHandler) {
+	p.Mux.PATCH(pattern, middle(fn, p.appName))
 }
 
 func (p *Pico) Delete(pattern string, fn PicoHandler) {
-	p.Mux.DELETE(pattern, middle(fn, p.appName, p.useAppManager, false))
+	p.Mux.DELETE(pattern, middle(fn, p.appName))
 }
 
 func (p *Pico) StaticDefault(diskPath string) {
@@ -135,19 +143,19 @@ func (p *Pico) SkipAllMiddlewares() {
 	skipmiddlewares = true
 }
 
-func (p *Pico) Before(m middlewarehandler) {
+func (p *Pico) Before(m PicoMiddleWareHandler) {
 	premiddlewares = append(premiddlewares, m)
 }
 
-func (p *Pico) Use(m middlewarehandler) {
+func (p *Pico) Use(m PicoMiddleWareHandler) {
 	middlewares = append(middlewares, m)
 }
 
-func (p *Pico) Must(m middlewarehandler) {
+func (p *Pico) Must(m PicoMiddleWareHandler) {
 	must = append(must, m)
 }
 
-func (p *Pico) After(m middlewarehandler) {
+func (p *Pico) After(m PicoMiddleWareHandler) {
 	postmiddlewares = append(postmiddlewares, m)
 }
 
@@ -184,11 +192,11 @@ func (p *Pico) ListenS(port string) {
 	p.Listen(int(po))
 }
 
-func (p *Pico) ListenTLS(port, cert, key string) {
+func (p *Pico) ListenTLS(port, cert, key string) error {
 	cer, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 
 	config := &tls.Config{Certificates: []tls.Certificate{cer}}
@@ -198,7 +206,7 @@ func (p *Pico) ListenTLS(port, cert, key string) {
 		TLSConfig: config,
 	}
 	flash = make(Flash)
-	p.server.ListenAndServeTLS(cert, key)
+	return p.server.ListenAndServeTLS(cert, key)
 }
 
 func (p *Pico) Listen(port int) error {
@@ -275,38 +283,40 @@ func (p *Pico) StopOnIntWithFunc(fn func()) {
 			fmt.Println("Done!")
 		}
 
-		close(p.c)
-
 		if fn != nil {
 			fmt.Println("Calling INT callback")
 			fn()
 		}
+
+		close(p.c)
 
 		fmt.Println("Exiting to OS")
 		os.Exit(0)
 	}()
 }
 
-func (p *Pico) Stop() {
+func (p *Pico) Stop() error {
 
 	fmt.Println("Shutting Down server")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	err := p.server.Shutdown(ctx)
 
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// cancel()
-
-	//p.server.Stop(time.Second * 2)
-	fmt.Println("Shutdown complete")
 	flash.Clear()
-	//<-p.server.StopChan()
+	if err != nil {
+		return err
+	}
+	fmt.Println("Shutdown complete")
+	return nil
 }
 
 func New() *Pico {
 	isDev = true
 	return &Pico{Mux: httprouter.New()}
+}
+
+func picohandlertohttphandler(c PicoHandler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c(&Context{w: w, r: r})
+	})
 }

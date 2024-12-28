@@ -10,12 +10,12 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type middlewarehandler func(c *Context) bool
+type PicoMiddleWareHandler func(c *Context) bool
 
-var premiddlewares []middlewarehandler
-var postmiddlewares []middlewarehandler
-var middlewares []middlewarehandler
-var must []middlewarehandler
+var premiddlewares []PicoMiddleWareHandler
+var postmiddlewares []PicoMiddleWareHandler
+var middlewares []PicoMiddleWareHandler
+var must []PicoMiddleWareHandler
 
 type reqcount struct {
 	r map[string]uint64
@@ -44,11 +44,11 @@ func (r *reqcount) Get(k string) uint64 {
 
 var rqc reqcount
 
-func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func middle(p PicoHandler, appname string) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		if r := recover(); r != nil {
-			fmt.Println("Recovering in Middle")
+			// fmt.Println("Recovering in Middle")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -56,19 +56,20 @@ func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool)
 		rqc.Add(r.URL.Path)
 
 		var sessionId string
-		if useAppManager {
-			if len(appname) > 0 {
-				c, err := r.Cookie(appname)
-				if err == nil {
-					sessionId = c.Value
-				}
-			}
-		}
+		// if useAppManager {
+		// 	if len(appname) > 0 {
+		// 		c, err := r.Cookie(appname)
+		// 		if err == nil {
+		// 			sessionId = c.Value
+		// 		}
+		// 	}
+		// }
 
 		atomic.AddUint64(&requestCount, 1)
 
 		start := time.Now()
-		c := &Context{SessionId: sessionId, AppName: appname, UserManager: &usermanager{appname: appname}, w: w, r: r, params: make(map[string]string), Start: time.Now()}
+		//UserManager: &usermanager{appname: appname},
+		c := &Context{Store: newStore(), SessionId: sessionId, AppName: appname, w: w, r: r, params: make(map[string]string), Start: time.Now()}
 
 		for _, par := range ps {
 			c.params[par.Key] = par.Value
@@ -117,17 +118,20 @@ func middle(p PicoHandler, appname string, useAppManager bool, iswebsocket bool)
 		}
 		// }
 
-		c.State = nil
-		c.User = nil
+		c.params = nil
 		c.SessionId = ""
+		c.State = nil
+		c.Store = nil
+		c.User = nil
+		c.UserData = nil
 
-		if c.s != nil {
-			c.s.Close()
-		}
+		// if c.s != nil {
+		// 	c.s.Close()
+		// }
 
-		if c.red != nil {
-			c.red.Close()
-		}
+		// if c.red != nil {
+		// 	c.red.Close()
+		// }
 
 		if isDev {
 			// fmt.Println("ts:", time.Now().Format(time.RFC3339), time.Since(start), "req#:", rqc.Get(r.URL.Path), "/", atomic.LoadUint64(&requestCount), "url:", r.URL)

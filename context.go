@@ -15,28 +15,26 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/redis.v4"
-
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
-
-	mgo "gopkg.in/mgo.v2"
 )
 
 type Context struct {
-	w           http.ResponseWriter
-	r           *http.Request
-	params      map[string]string
-	SessionId   string
-	s           *mgo.Session
-	red         *redis.Client
+	w         http.ResponseWriter
+	r         *http.Request
+	params    map[string]string
+	SessionId string
+	// s         *mgo.Session
+	// red         *redis.Client
 	machineID   string
 	Start       time.Time
 	IsWebsocket bool
-	UserManager *usermanager
-	AppName     string
-	User        interface{}
-	State       interface{}
+	// UserManager *usermanager
+	AppName  string
+	User     interface{}
+	State    interface{}
+	UserData interface{}
+	Store    *store
 }
 
 func (c *Context) SessionHash() string {
@@ -116,6 +114,10 @@ func (c *Context) Method() string {
 	return c.r.Method
 }
 
+func (c *Context) MethodLower() string {
+	return strings.ToLower(c.r.Method)
+}
+
 func (c *Context) Header(key string) string {
 	return c.r.Header.Get(key)
 }
@@ -163,6 +165,11 @@ func (c *Context) Status(statusCode int) {
 	c.w.WriteHeader(statusCode)
 }
 
+func (c *Context) StatusWithString(statusCode int, status string) {
+	c.w.WriteHeader(statusCode)
+	c.String(status)
+}
+
 func (c *Context) Status404() {
 	c.w.WriteHeader(http.StatusNotFound)
 }
@@ -195,6 +202,7 @@ func (c *Context) View(filePath string, data interface{}) error {
 		fmt.Fprint(c, err.Error())
 		return err
 	}
+
 	err = tmpl.Execute(c.w, data)
 	return err
 }
@@ -244,6 +252,10 @@ func (c *Context) HasPrefix(prefix string) bool {
 
 func (c *Context) IsStatic() bool {
 	p := c.r.URL.Path
+	//Check if path has a file extension
+
+	// return strings.Index(p, ".") > 0
+
 	lastSlash := strings.LastIndex(p, "/")
 
 	if lastSlash < 1 {
@@ -304,29 +316,29 @@ func (c *Context) GetCookie(name string) string {
 	return val
 }
 
-func (c *Context) Mongo() (*mgo.Session, error) {
-	if c.s != nil {
-		return c.s, nil
-	}
+// func (c *Context) Mongo() (*mgo.Session, error) {
+// 	if c.s != nil {
+// 		return c.s, nil
+// 	}
 
-	s, err := getSession()
-	c.s = s
-	return s, err
-}
+// 	s, err := getSession()
+// 	c.s = s
+// 	return s, err
+// }
 
-func (c *Context) Redis() (*redis.Client, error) {
-	if c.red != nil {
-		return c.red, nil
-	}
+// func (c *Context) Redis() (*redis.Client, error) {
+// 	if c.red != nil {
+// 		return c.red, nil
+// 	}
 
-	c.red = redis.NewClient(&redis.Options{
-		Addr:     redisURL,
-		DB:       0,
-		Network:  "tcp",
-		Password: redisPassword,
-	})
-	return c.red, c.red.Ping().Err()
-}
+// 	c.red = redis.NewClient(&redis.Options{
+// 		Addr:     redisURL,
+// 		DB:       0,
+// 		Network:  "tcp",
+// 		Password: redisPassword,
+// 	})
+// 	return c.red, c.red.Ping().Err()
+// }
 
 func (c *Context) Upgrade() (*websocket.Conn, error) {
 	var upgrader = websocket.Upgrader{EnableCompression: true, HandshakeTimeout: time.Second * 5, ReadBufferSize: 4096, WriteBufferSize: 4096}

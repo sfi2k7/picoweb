@@ -8,6 +8,7 @@ import (
 
 type Interface interface{}
 type WsData map[string]Interface
+
 type Subscribers map[string]struct{}
 
 func (wd WsData) Get(k string) Interface {

@@ -26,3 +26,4 @@ _testmain.go
 *.json
 t.json
 *.sh
+deploy_blueserver.sh
