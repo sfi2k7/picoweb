@@ -6,9 +6,9 @@ Teeny Tiny Web Wrapper around httprouter
 ## Features
 - Fast - thanks to _httprouter_
 - **graceful** shutdown
-- socketio
-- raw WebSocket (soon)
-- more on the way
+- raw WebSocket (Gorilla) (2024)
+- Routing Groups (2024)
+- New _Router_ Component to facilitate route grouping
 
 ```GO
     package main
@@ -45,7 +45,7 @@ Teeny Tiny Web Wrapper around httprouter
     })
 ```
 
-### Latest Examples:
+### Latest Examples (2024):
 
 ```GO
     router := picoweb.NewRouter()
@@ -92,7 +92,7 @@ Teeny Tiny Web Wrapper around httprouter
 	})
 
 	api.Must(func(c *picoweb.Context) {
-		fmt.Println("Api must middleware (api logger)")
+		fmt.Println("Api must middleware")
 	})
 
 	api.Get("/", func(c *picoweb.Context) {
@@ -113,7 +113,6 @@ Teeny Tiny Web Wrapper around httprouter
 
 	usersapi.Get("/", func(c *picoweb.Context) {
 		c.View("./index.html", nil)
-		// c.String("Hello World at /api/users")
 	})
 
 	config := router.Config()
@@ -126,8 +125,6 @@ Teeny Tiny Web Wrapper around httprouter
 
 	router.StartServer()
 ```
-
-
 
 ### License
 MIT - Please see the `LICENSE` file
